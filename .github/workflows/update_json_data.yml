@@ -105,6 +105,7 @@ jobs:
       - name: リリースを作成
         # 前のステップでコミットが行われた場合のみ実行
         if: steps.commit_push.outputs.committed == 'true'
+        id: create_release # このステップにIDを付与 (upload_urlを参照するため)
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -116,3 +117,15 @@ jobs:
             ファイル: imas_music_db.json
           draft: false
           prerelease: false
+
+      - name: リリースアセットをアップロード (JSONファイル)
+        # 前のステップでコミットが行われた場合のみ実行 (リリースが作成された場合)
+        if: steps.commit_push.outputs.committed == 'true'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # 作成されたリリースのアップロードURL
+          asset_path: ./data_repo/imas_music_db.json # アップロードするファイルのパス (dataブランチのファイル)
+          asset_name: imas_music_db.json # リリースに表示されるアセット名
+          asset_content_type: application/json # アセットのコンテントタイプ
