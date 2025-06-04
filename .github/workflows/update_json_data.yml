@@ -67,6 +67,10 @@ jobs:
         id: commit_push # このステップにIDを付与
         working-directory: ./data_repo # dataブランチをチェックアウトしたディレクトリ
         run: |
+          # デフォルト値を設定 (コミットがない場合)
+          echo "committed=false" >> $GITHUB_OUTPUT
+          echo "tag_name_datetime=" >> $GITHUB_OUTPUT
+
           GENERATED_JSON_PATH="${{ steps.generate_json.outputs.json_file_path }}"
           echo "main_repoで生成されたJSONファイルのパス: ${GENERATED_JSON_PATH}"
 
@@ -88,11 +92,12 @@ jobs:
             git push origin data
             echo "imas_music_db.json をコミットし、dataブランチにプッシュしました。"
             
-            echo "committed=true" >> $GITHUB_OUTPUT # コミットフラグをtrueに
-            echo "tag_name_datetime=${TAG_NAME_DATETIME_FOR_RELEASE}" >> $GITHUB_OUTPUT # タグ名用日時をoutputに設定
+            # コミットが行われたので、出力を更新
+            echo "committed=true" >> $GITHUB_OUTPUT
+            echo "tag_name_datetime=${TAG_NAME_DATETIME_FOR_RELEASE}" >> $GITHUB_OUTPUT
           else
             echo "imas_music_db.json に変更はありません。コミットする内容はありません。"
-            echo "committed=false" >> $GITHUB_OUTPUT # コミットフラグはfalseのまま
+            # committed は false のまま (runの先頭で設定済み)
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
