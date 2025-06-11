@@ -117,6 +117,7 @@ jobs:
             ファイル: imas_music_db.json
           draft: false
           prerelease: false
+          commitish: data
 
       - name: リリースアセットをアップロード (JSONファイル)
         # 前のステップでコミットが行われた場合のみ実行 (リリースが作成された場合)
