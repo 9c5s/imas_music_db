@@ -123,22 +123,22 @@ class GoogleApiService:
 
     def initialize(self) -> bool:
         """APIサービスを初期化します。"""
-        print("* Google APIサービスの初期化を開始します...")
+        print("[情報] Google APIサービスの初期化を開始します...")
         try:
             creds, _ = google.auth.default(scopes=SCOPES)
             self.drive = build("drive", "v3", credentials=creds)
             self.sheets = build("sheets", "v4", credentials=creds)
         except DefaultCredentialsError:
-            print("❌ エラー: APIの認証情報の取得に失敗しました。")
+            print("[エラー] APIの認証情報の取得に失敗しました。")
             print(
                 "  gcloud CLIで 'gcloud auth application-default login' を実行してください。",
             )
             return False
         except HttpError as e:
-            print(f"❌ エラー: APIサービスのビルド中にエラーが発生しました: {e}")
+            print(f"[エラー] APIサービスのビルド中にエラーが発生しました: {e}")
             return False
         else:
-            print("✅ APIサービスの初期化に成功しました。")
+            print("[成功] APIサービスの初期化に成功しました。")
             return True
 
 
@@ -161,7 +161,7 @@ class SheetProcessor:
 
     def process(self, sheet_data: list[list[str]]) -> list[dict[str, Any]]:
         """シートデータを処理し、整形・ソートされたリストを返します。"""
-        print("\n* データの処理を開始します...")
+        print("\n[情報] データの処理を開始します...")
         data_start_row = self._config["data_structure"]["data_start_row"]
         start_col, end_col = self._config["data_structure"]["end_check_columns"]
         start_col_idx = _col_to_index(start_col)
@@ -180,7 +180,7 @@ class SheetProcessor:
         # IDで降順ソート
         processed_list.sort(key=self._sort_key, reverse=True)
 
-        print(f"+ {len(processed_list)}件のデータを取得し、ソートしました。")
+        print(f"[情報] {len(processed_list)}件のデータを取得し、ソートしました。")
         return processed_list
 
     def _process_row(self, row: list[str]) -> dict[str, Any]:
@@ -262,11 +262,13 @@ class JsonFormatter:
 
     def format(self, json_string: str) -> str:
         """JSON文字列をフォーマットします。"""
-        print("\n* Prettierを使用してJSONをフォーマットします...")
+        print("\n[情報] Prettierを使用してJSONをフォーマットします...")
         if not shutil.which(self._command):
-            print(f"* 警告: '{self._command}'コマンドが見つかりませんでした。")
-            print("* JSONはフォーマットされずに出力されます。")
-            print("* 'npm install -g prettier' を実行してインストールしてください。")
+            print(f"[警告] '{self._command}'コマンドが見つかりませんでした。")
+            print("[情報] JSONはフォーマットされずに出力されます。")
+            print(
+                "[情報] 'npm install -g prettier' を実行してインストールしてください。",
+            )
             return json_string
 
         try:
@@ -279,11 +281,11 @@ class JsonFormatter:
                 check=True,
             )
         except (subprocess.CalledProcessError, FileNotFoundError) as e:
-            print(f"❌ エラー: Prettierの実行に失敗しました - {e}")
-            print("* JSONはフォーマットされずに出力されます。")
+            print(f"[エラー] Prettierの実行に失敗しました: {e}")
+            print("[情報] JSONはフォーマットされずに出力されます。")
             return json_string
         else:
-            print("+ Prettierによるフォーマットが完了しました。")
+            print("[成功] Prettierによるフォーマットが完了しました。")
             return process.stdout
 
 
@@ -298,7 +300,9 @@ class SheetCopier:
 
     def __enter__(self) -> Self:
         """コンテキストに入り、スプレッドシートをコピーします。"""
-        print(f"\n* スプレッドシート (ID: {self._source_id}) のコピーを開始します...")
+        print(
+            f"\n[情報] スプレッドシート (ID: {self._source_id}) のコピーを開始します...",
+        )
         copy_title = f"tmp_copy_{uuid.uuid4().hex}"
         body = {"name": copy_title}
         try:
@@ -310,7 +314,7 @@ class SheetCopier:
             self.copied_file_id = response.get("id")
             if self.copied_file_id:
                 print(
-                    f"✅ スプレッドシートをコピーしました。新しいID: {self.copied_file_id}",
+                    f"[成功] スプレッドシートをコピーしました。新しいID: {self.copied_file_id}",
                 )
                 return self
 
@@ -318,7 +322,7 @@ class SheetCopier:
             error_message = "コピー後のファイルIDが取得できませんでした。"
             raise ValueError(error_message)
         except HttpError as e:
-            print(f"❌ エラー: スプレッドシートのコピーに失敗しました - {e}")
+            print(f"[エラー] スプレッドシートのコピーに失敗しました: {e}")
             raise  # 上位のtry-exceptで捕捉させる
 
     def __exit__(
@@ -329,12 +333,12 @@ class SheetCopier:
     ) -> None:
         """コンテキストを抜け、一時ファイルを削除します。"""
         if self.copied_file_id:
-            print(f"\n* 一時ファイル (ID: {self.copied_file_id}) を削除します...")
+            print(f"\n[情報] 一時ファイル (ID: {self.copied_file_id}) を削除します...")
             try:
                 self._drive_service.files().delete(fileId=self.copied_file_id).execute()  # type: ignore[attr-defined]
-                print("✅ 一時ファイルを削除しました。")
+                print("[成功] 一時ファイルを削除しました。")
             except HttpError as e:
-                print(f"❌ エラー: 一時ファイルの削除に失敗しました - {e}")
+                print(f"[エラー] 一時ファイルの削除に失敗しました: {e}")
 
 
 def main() -> None:
@@ -358,7 +362,7 @@ def main() -> None:
 
             # 3. シートからデータを取得
             sheet_name = CONFIG["target_sheet_name"]
-            print(f"\n* シート '{sheet_name}' からデータを取得します...")
+            print(f"\n[情報] シート '{sheet_name}' からデータを取得します...")
             try:
                 result = (
                     api_services.sheets.spreadsheets()  # type: ignore[attr-defined]
@@ -371,14 +375,14 @@ def main() -> None:
                     .execute()
                 )
             except HttpError as e:
-                print(f"❌ エラー: シートデータの取得に失敗しました - {e}")
+                print(f"[エラー] シートデータの取得に失敗しました: {e}")
                 return
 
             sheet_data = result.get("values", [])
             data_start_row = CONFIG["data_structure"]["data_start_row"]
             if not sheet_data or len(sheet_data) < data_start_row:
                 print(
-                    f"* 警告: {data_start_row}行目以降のデータが見つかりませんでした。",
+                    f"[警告] {data_start_row}行目以降のデータが見つかりませんでした。",
                 )
                 return
 
@@ -398,14 +402,14 @@ def main() -> None:
             # 6. ファイルに保存
             output_path = Path(CONFIG["output_filename"])
             output_path.write_text(formatted_json, encoding="utf-8")
-            print(f"\n✅ 成功: JSONデータを {output_path.resolve()} に保存しました。")
+            print(f"\n[成功] JSONデータを {output_path.resolve()} に保存しました。")
 
     except (OSError, HttpError, ValueError) as e:
-        print(f"\n❌ エラー: メイン処理で予期せぬエラーが発生しました: {e}")
+        print(f"\n[エラー] メイン処理で予期せぬエラーが発生しました: {e}")
 
     except Exception as e:  # noqa: BLE001
         print(
-            f"\n❌ エラー: 予期せぬ重大なエラーが発生しました ({type(e).__name__}): {e}",
+            f"\n[エラー] 予期せぬ重大なエラーが発生しました ({type(e).__name__}): {e}",
         )
     finally:
         print("\n--- 全ての処理が完了しました ---")
