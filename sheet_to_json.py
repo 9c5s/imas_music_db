@@ -1,169 +1,415 @@
-import csv
+"""Googleスプレッドシートをコピーし、指定のシートからデータを取得・整形します。
+
+このスクリプトは以下の手順を自動で実行します:
+1. Google Drive APIを使用し、指定されたスプレッドシートをユーザーのドライブにコピーする。
+2. Google Sheets APIを使用し、コピーされたシートからデータを読み取る。
+3. 読み取ったデータを設定に基づいて処理・整形し、IDの降順でソートする。
+4. 処理後のデータをPrettierで整形し、JSONファイルとして保存する。
+5. 処理完了後、コピーされた一時的なスプレッドシートをドライブから完全に削除する。
+"""
+
+from __future__ import annotations
+
 import json
 import re
-import requests
+import shutil
+import subprocess
+import sys
+import uuid
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, NotRequired, Self, TypedDict
 
-# --- グローバル定数定義 ---
-# 取得先のシートURL (固定)
-TARGET_SHEET_URL = "https://docs.google.com/spreadsheets/d/14Q2A-eeXVDI_Qdb_z_Jwr5IwerDsr5kfRTzRw1J1z18/edit?gid=1025592751#gid=1025592751"
-# 出力ファイル名 (固定)
-OUTPUT_FILENAME = "imas_music_db.json"
+import google.auth
+from google.auth.exceptions import DefaultCredentialsError
+from googleapiclient.discovery import Resource, build
+from googleapiclient.errors import HttpError
 
-# --- 固定パラメータ定義 (関数内で使用) ---
-# 行インデックス (0始まり)
-HEADER_ROW_INDEX = 6  # 7行目に相当
-DATA_START_ROW_INDEX = 8  # 9行目に相当
-
-# JSONに含める対象列のインデックス (0始まり)
-# C列=2, D列=3, F列=5, G列=6, H列=7, I列=8, J列=9, K列=10, N列=13, O列=14
-TARGET_COLUMN_INDICES = [2, 3, 5, 6, 7, 8, 9, 10, 13, 14]
-
-# データ終了判定に使用する列範囲 (C列～O列)
-# この範囲の全てのセルが空になった時点でデータ終了とみなす
-DATA_END_CHECK_COLUMN_START_INDEX = 2  # C列に相当
-DATA_END_CHECK_COLUMN_END_INDEX = 14  # O列に相当
+if TYPE_CHECKING:
+    from types import TracebackType
 
 
-def generate_json_from_public_spreadsheet_table(sheet_url: str) -> str | None:
-    """
-    公開されているGoogleスプレッドシートのURLから、指定された列のデータを取得し、
-    JSON文字列を生成します。
-    ヘッダー行: HEADER_ROW_INDEX で指定された行。TARGET_COLUMN_INDICES で指定された列のみ対象。
-                ヘッダー名が空文字または空白のみの列は無視されます。
-    データ行: DATA_START_ROW_INDEX で指定された行以降。無視されなかったヘッダー列に対応するデータのみを処理。
-                値が空文字または空白のみの項目は、生成されるJSONオブジェクトから除外されます。
-                DATA_END_CHECK_COLUMN_START_INDEX から DATA_END_CHECK_COLUMN_END_INDEX の列の範囲が
-                全て空になった時点でデータ終了とみなします。
+# --- 型定義 ---
+class ColumnMapping(TypedDict):
+    """列マッピングの型定義"""
 
-    Args:
-        sheet_url: Googleスプレッドシートの公開URL。
+    key: str
+    is_array: NotRequired[bool]
 
-    Returns:
-        成功した場合はJSON文字列、失敗した場合はNoneを返します。
-    """
-    sheet_id_match = re.search(r"/spreadsheets/d/([^/]+)", sheet_url)
-    if not sheet_id_match:
-        print("エラー: URLからシートIDを抽出できませんでした。")
-        return None
-    sheet_id = sheet_id_match.group(1)
 
-    gid_match = re.search(r"[#&]gid=([^&]+)", sheet_url)
-    gid = gid_match.group(1) if gid_match else "0"
+class DataStructure(TypedDict):
+    """データ構造設定の型定義"""
 
-    csv_export_url = (
-        f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gid}"
-    )
-    print(f"CSVエクスポートURL: {csv_export_url}")
+    data_start_row: int
+    end_check_columns: tuple[str, str]
 
-    try:
-        response = requests.get(csv_export_url, timeout=10)
-        response.raise_for_status()
-        response.encoding = response.apparent_encoding
-        csv_text = response.text
-    except requests.exceptions.RequestException as e:
-        print(f"エラー: スプレッドシートの取得に失敗しました - {e}")
-        return None
-    except Exception as e:  # pylint: disable=broad-except
-        print(f"予期せぬエラーが発生しました（リクエスト処理中）: {e}")
-        return None
 
-    try:
-        if csv_text.startswith("\ufeff"):
-            csv_text = csv_text[1:]
-        if not csv_text.strip():
-            print("警告: スプレッドシートが空か、内容がありません。")
-            return json.dumps([], indent=2, ensure_ascii=False)
+class Config(TypedDict):
+    """設定全体の型定義"""
 
-        lines = csv_text.splitlines()
-        all_rows_raw = list(csv.reader(lines))
+    source_spreadsheet_id: str
+    target_sheet_name: str
+    output_filename: str
+    data_structure: DataStructure
+    column_mapping: dict[str, ColumnMapping]
+    ignore_values: set[str]
 
-        if len(all_rows_raw) <= HEADER_ROW_INDEX:
+
+# --- 設定 (ここを編集してください) ---
+CONFIG: Config = {
+    # コピー元のスプレッドシートID
+    "source_spreadsheet_id": "14Q2A-eeXVDI_Qdb_z_Jwr5IwerDsr5kfRTzRw1J1z18",
+    # 読み取り対象のシート(タブ)の名前
+    "target_sheet_name": "#非表示_初出",
+    # 出力するJSONファイル名
+    "output_filename": "imas_music_db.json",
+    # データ構造に関する設定
+    "data_structure": {
+        # データが始まる行番号 (3行目)
+        "data_start_row": 3,
+        # データ終端を判定する列の範囲 (A列からO列)
+        "end_check_columns": ("A", "O"),
+    },
+    # 列とJSONキーのマッピング
+    "column_mapping": {
+        # 列文字: { key: JSONキー名, is_array: 配列にするか }
+        "B": {"key": "ID"},
+        "C": {"key": "曲名"},
+        "D": {"key": "よみがな"},
+        "E": {"key": "CD題"},
+        "F": {"key": "作詞", "is_array": True},
+        "G": {"key": "作曲", "is_array": True},
+        "H": {"key": "編曲", "is_array": True},
+        "I": {"key": "ブランド", "is_array": True},
+        "J": {"key": "時間"},
+        "K": {"key": "歌唱", "is_array": True},
+        "L": {"key": "歌唱", "is_array": True},  # Kと同じキーにマッピング
+        "M": {"key": "CD品番"},
+        "N": {"key": "CD名"},
+        "O": {"key": "発売日"},
+    },
+    # 空文字として扱う値のセット
+    "ignore_values": {"#不明", "未定", "#未定"},
+}
+# --- 設定ここまで ---
+
+# --- Google API スコープ ---
+SCOPES: list[str] = [
+    "https://www.googleapis.com/auth/drive",
+    "https://www.googleapis.com/auth/spreadsheets",
+]
+
+# --- 正規表現 ---
+# 「歌唱」列の解析用 (例: "ユニット名[メンバー1,メンバー2]")
+SINGER_PATTERN = re.compile(r"(.+?)\[(.+?)\]$")
+# 「歌唱」列の分割用 (", "で分割するが、[]内は無視)
+SINGER_SPLIT_PATTERN = re.compile(r",\s*(?![^[]*\])")
+
+
+def _col_to_index(col: str) -> int:
+    """列文字(A, B, ..)を0-basedのインデックスに変換します。"""
+    index = 0
+    for char in col.upper():
+        index = index * 26 + (ord(char) - ord("A") + 1)
+    return index - 1
+
+
+class GoogleApiService:
+    """Google DriveとSheets APIのサービスを管理するクラス。"""
+
+    def __init__(self) -> None:
+        """GoogleApiServiceを初期化します。"""
+        self.drive: Resource | None = None
+        self.sheets: Resource | None = None
+
+    def initialize(self) -> bool:
+        """APIサービスを初期化します。"""
+        print("* Google APIサービスの初期化を開始します...")
+        try:
+            creds, _ = google.auth.default(scopes=SCOPES)
+            self.drive = build("drive", "v3", credentials=creds)
+            self.sheets = build("sheets", "v4", credentials=creds)
+        except DefaultCredentialsError:
+            print("❌ エラー: APIの認証情報の取得に失敗しました。")
             print(
-                f"エラー: 指定されたヘッダー行 ({HEADER_ROW_INDEX + 1}行目) がシートに存在しません。"
+                "  gcloud CLIで 'gcloud auth application-default login' を実行してください。",
             )
-            return None
+            return False
+        except HttpError as e:
+            print(f"❌ エラー: APIサービスのビルド中にエラーが発生しました: {e}")
+            return False
+        else:
+            print("✅ APIサービスの初期化に成功しました。")
+            return True
 
-        header_candidate_row_full = all_rows_raw[HEADER_ROW_INDEX]
 
-        valid_headers = []  # (ヘッダー名, 元のシートでの列インデックス) のタプルを格納
-        for col_idx in TARGET_COLUMN_INDICES:
-            if col_idx < len(header_candidate_row_full):
-                h_val = header_candidate_row_full[col_idx]
-                stripped_h_val = h_val.strip()
-                if stripped_h_val:  # strip後が空文字でない場合のみ有効なヘッダーとする
-                    valid_headers.append((stripped_h_val, col_idx))
-            # else: ヘッダー行に対象列が存在しない場合はスキップ
+class SheetProcessor:
+    """スプレッドシートの生データを処理、整形、ソートするクラス。"""
 
-        if not valid_headers:
-            print("警告: 指定された対象列に有効なヘッダー名が見つかりませんでした。")
-            return json.dumps([], indent=2, ensure_ascii=False)
+    def __init__(self, config: Config) -> None:
+        """SheetProcessorを初期化します。"""
+        self._config = config
+        self._col_map = config["column_mapping"]
+        self._ignore_values = config["ignore_values"]
+        self._array_keys = list(
+            dict.fromkeys(
+                v["key"] for v in self._col_map.values() if v.get("is_array")
+            ),
+        )
+        self._ordered_keys = list(
+            dict.fromkeys(v["key"] for v in self._col_map.values()),
+        )
 
-        data_list = []
-        if len(all_rows_raw) > DATA_START_ROW_INDEX:
-            for row_index in range(DATA_START_ROW_INDEX, len(all_rows_raw)):
-                current_data_row_full = all_rows_raw[row_index]
+    def process(self, sheet_data: list[list[str]]) -> list[dict[str, Any]]:
+        """シートデータを処理し、整形・ソートされたリストを返します。"""
+        print("\n* データの処理を開始します...")
+        data_start_row = self._config["data_structure"]["data_start_row"]
+        start_col, end_col = self._config["data_structure"]["end_check_columns"]
+        start_col_idx = _col_to_index(start_col)
+        end_col_idx = _col_to_index(end_col)
 
-                # データ終了判定: C列～O列の範囲のセルが全てstripして空かチェック
-                # この範囲の列数が不足している場合も考慮
-                start_check = DATA_END_CHECK_COLUMN_START_INDEX
-                end_check = DATA_END_CHECK_COLUMN_END_INDEX + 1  # スライス用に+1
+        data_rows = sheet_data[data_start_row - 1 :]
+        processed_list: list[dict[str, Any]] = []
 
-                # データ行がデータ終了判定範囲より短い場合は、存在する範囲でチェック
-                actual_end_check = min(end_check, len(current_data_row_full))
+        for row in data_rows:
+            # 指定範囲の列がすべて空ならデータ終端とみなす
+            if not any(cell.strip() for cell in row[start_col_idx : end_col_idx + 1]):
+                break
+            record = self._process_row(row)
+            processed_list.append(record)
 
-                if (
-                    start_check < actual_end_check
-                ):  # 判定範囲がデータ行に存在する場合のみチェック
-                    target_columns_for_emptiness_check = current_data_row_full[
-                        start_check:actual_end_check
+        # IDで降順ソート
+        processed_list.sort(key=self._sort_key, reverse=True)
+
+        print(f"+ {len(processed_list)}件のデータを取得し、ソートしました。")
+        return processed_list
+
+    def _process_row(self, row: list[str]) -> dict[str, Any]:
+        """単一の行データを処理します。"""
+        record: dict[str, Any] = {
+            key: [] if key in self._array_keys else "" for key in self._ordered_keys
+        }
+
+        for col_letter, mapping in self._col_map.items():
+            col_idx = _col_to_index(col_letter)
+            key = mapping["key"]
+            is_array = mapping.get("is_array", False)
+            value = row[col_idx].strip() if col_idx < len(row) and row[col_idx] else ""
+
+            if not value or value in self._ignore_values:
+                continue
+
+            if is_array:
+                # '歌唱' 列の特殊処理
+                if key == "歌唱":
+                    new_values = self._parse_singers(value)
+                # 'ブランド' 列の特殊処理
+                elif key == "ブランド" and "越境" in value:
+                    new_values = [
+                        v.strip()
+                        for v in value.split(":")
+                        if v.strip() and v.strip() != "越境"
                     ]
-                    # 足りない分は空とみなすため、元の範囲の長さで空文字列リストを作成し、それで判定
-                    full_range_check_values = [""] * (
-                        DATA_END_CHECK_COLUMN_END_INDEX
-                        - DATA_END_CHECK_COLUMN_START_INDEX
-                        + 1
+                else:
+                    new_values = [v.strip() for v in value.split(",") if v.strip()]
+                record[key].extend(new_values)
+            else:
+                record[key] = value
+
+        # 配列キーの重複を削除
+        for key in self._array_keys:
+            if record.get(key):
+                seen = set()
+                record[key] = [x for x in record[key] if not (x in seen or seen.add(x))]
+
+        return record
+
+    @staticmethod
+    def _parse_singers(value: str) -> list[str]:
+        """「歌唱」列の特殊な形式を解析し、名前のリストを返します。"""
+        new_values = []
+        parts = SINGER_SPLIT_PATTERN.split(value)
+        for part_item in parts:
+            stripped_part = part_item.strip()
+            if not stripped_part:
+                continue
+
+            match = SINGER_PATTERN.match(stripped_part)
+            if match:
+                unit, members_str = match.groups()
+                new_values.append(unit.strip())
+                new_values.extend(
+                    m.strip() for m in members_str.split(",") if m.strip()
+                )
+            else:
+                new_values.append(stripped_part)
+        return new_values
+
+    @staticmethod
+    def _sort_key(item: dict[str, Any]) -> int:
+        """ソート用のキーを返します。"""
+        try:
+            return int(item.get("ID", 0))
+        except (ValueError, TypeError):
+            return 0
+
+
+class JsonFormatter:
+    """Prettierを使用してJSONをフォーマットするクラス。"""
+
+    def __init__(self) -> None:
+        """JsonFormatterを初期化します。"""
+        self._command = "prettier.cmd" if sys.platform == "win32" else "prettier"
+
+    def format(self, json_string: str) -> str:
+        """JSON文字列をフォーマットします。"""
+        print("\n* Prettierを使用してJSONをフォーマットします...")
+        if not shutil.which(self._command):
+            print(f"* 警告: '{self._command}'コマンドが見つかりませんでした。")
+            print("* JSONはフォーマットされずに出力されます。")
+            print("* 'npm install -g prettier' を実行してインストールしてください。")
+            return json_string
+
+        try:
+            process = subprocess.run(  # noqa: S603
+                [self._command, "--parser", "json"],
+                input=json_string,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                check=True,
+            )
+        except (subprocess.CalledProcessError, FileNotFoundError) as e:
+            print(f"❌ エラー: Prettierの実行に失敗しました - {e}")
+            print("* JSONはフォーマットされずに出力されます。")
+            return json_string
+        else:
+            print("+ Prettierによるフォーマットが完了しました。")
+            return process.stdout
+
+
+class SheetCopier:
+    """スプレッドシートのコピーと削除を管理するコンテキストマネージャ。"""
+
+    def __init__(self, drive_service: Resource, source_id: str) -> None:
+        """SheetCopierを初期化します。"""
+        self._drive_service = drive_service
+        self._source_id = source_id
+        self.copied_file_id: str | None = None
+
+    def __enter__(self) -> Self:
+        """コンテキストに入り、スプレッドシートをコピーします。"""
+        print(f"\n* スプレッドシート (ID: {self._source_id}) のコピーを開始します...")
+        copy_title = f"tmp_copy_{uuid.uuid4().hex}"
+        body = {"name": copy_title}
+        try:
+            response = (
+                self._drive_service.files()  # type: ignore[attr-defined]
+                .copy(fileId=self._source_id, body=body, fields="id")
+                .execute()
+            )
+            self.copied_file_id = response.get("id")
+            if self.copied_file_id:
+                print(
+                    f"✅ スプレッドシートをコピーしました。新しいID: {self.copied_file_id}",
+                )
+                return self
+
+            # HttpErrorを直接生成するのではなく、より適切な例外を使用
+            error_message = "コピー後のファイルIDが取得できませんでした。"
+            raise ValueError(error_message)
+        except HttpError as e:
+            print(f"❌ エラー: スプレッドシートのコピーに失敗しました - {e}")
+            raise  # 上位のtry-exceptで捕捉させる
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
+        """コンテキストを抜け、一時ファイルを削除します。"""
+        if self.copied_file_id:
+            print(f"\n* 一時ファイル (ID: {self.copied_file_id}) を削除します...")
+            try:
+                self._drive_service.files().delete(fileId=self.copied_file_id).execute()  # type: ignore[attr-defined]
+                print("✅ 一時ファイルを削除しました。")
+            except HttpError as e:
+                print(f"❌ エラー: 一時ファイルの削除に失敗しました - {e}")
+
+
+def main() -> None:
+    """メイン処理"""
+    print("--- スプレッドシートのデータ取得処理を開始します ---")
+
+    # 1. APIサービス初期化
+    api_services = GoogleApiService()
+    if (
+        not api_services.initialize()
+        or not api_services.drive
+        or not api_services.sheets
+    ):
+        return
+
+    try:
+        # 2. スプレッドシートを一時的にコピー (コンテキストマネージャ使用)
+        with SheetCopier(api_services.drive, CONFIG["source_spreadsheet_id"]) as copier:
+            if not copier.copied_file_id:
+                return
+
+            # 3. シートからデータを取得
+            sheet_name = CONFIG["target_sheet_name"]
+            print(f"\n* シート '{sheet_name}' からデータを取得します...")
+            try:
+                result = (
+                    api_services.sheets.spreadsheets()  # type: ignore[attr-defined]
+                    .values()
+                    .get(
+                        spreadsheetId=copier.copied_file_id,
+                        range=f"'{sheet_name}'",
+                        valueRenderOption="FORMATTED_VALUE",
                     )
-                    for i, val in enumerate(target_columns_for_emptiness_check):
-                        if i < len(full_range_check_values):  # 念のため範囲チェック
-                            full_range_check_values[i] = val
-                else:  # データ行が短すぎて判定範囲が全くない場合は、空とみなさない（処理を続ける）
-                    full_range_check_values = [
-                        "dummy"
-                    ]  # 空ではないと判定させるためのダミー
+                    .execute()
+                )
+            except HttpError as e:
+                print(f"❌ エラー: シートデータの取得に失敗しました - {e}")
+                return
 
-                if not any(val.strip() for val in full_range_check_values):
-                    break
+            sheet_data = result.get("values", [])
+            data_start_row = CONFIG["data_structure"]["data_start_row"]
+            if not sheet_data or len(sheet_data) < data_start_row:
+                print(
+                    f"* 警告: {data_start_row}行目以降のデータが見つかりませんでした。",
+                )
+                return
 
-                record = {}
-                # 有効なヘッダーに対応するデータのみを処理
-                for header_name, original_sheet_col_idx in valid_headers:
-                    if original_sheet_col_idx < len(current_data_row_full):
-                        value = current_data_row_full[original_sheet_col_idx]
-                        if value.strip():  # 値をstripして空文字でない場合のみ項目を追加
-                            record[header_name] = value  # 元の値 (stripする前) を格納
+            # 4. データの処理と整形
+            processor = SheetProcessor(CONFIG)
+            processed_data = processor.process(sheet_data)
 
-                data_list.append(record)
+            # 5. JSONに変換してフォーマット
+            raw_json_string = json.dumps(
+                processed_data,
+                ensure_ascii=False,
+                separators=(",", ":"),
+            )
+            formatter = JsonFormatter()
+            formatted_json = formatter.format(raw_json_string)
 
-        return json.dumps(data_list, indent=2, ensure_ascii=False)
+            # 6. ファイルに保存
+            output_path = Path(CONFIG["output_filename"])
+            output_path.write_text(formatted_json, encoding="utf-8")
+            print(f"\n✅ 成功: JSONデータを {output_path.resolve()} に保存しました。")
 
-    except csv.Error as e:
-        print(f"エラー: CSVデータの解析に失敗しました - {e}")
-        return None
-    except Exception as e:  # pylint: disable=broad-except
-        print(f"予期せぬエラーが発生しました（データ処理中）: {e}")
-        return None
+    except (OSError, HttpError, ValueError) as e:
+        print(f"\n❌ エラー: メイン処理で予期せぬエラーが発生しました: {e}")
+
+    except Exception as e:  # noqa: BLE001
+        print(
+            f"\n❌ エラー: 予期せぬ重大なエラーが発生しました ({type(e).__name__}): {e}",
+        )
+    finally:
+        print("\n--- 全ての処理が完了しました ---")
 
 
 if __name__ == "__main__":
-    print(f"--- スプレッドシートの指定範囲をJSON化 ({TARGET_SHEET_URL}) ---")
-    json_output = generate_json_from_public_spreadsheet_table(TARGET_SHEET_URL)
-
-    if json_output:
-        try:
-            with open(OUTPUT_FILENAME, "w", encoding="utf-8") as f:
-                f.write(json_output)
-            print(f"\nJSONデータを {OUTPUT_FILENAME} に保存しました。")
-        except IOError as e:
-            print(f"ファイルへの保存に失敗しました: {e}")
-    else:
-        print("JSONデータを生成できませんでした。")
+    main()
