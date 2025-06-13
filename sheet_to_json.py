@@ -4,7 +4,7 @@
 1. Google Drive APIを使用し、指定されたスプレッドシートをユーザーのドライブにコピーする。
 2. Google Sheets APIを使用し、コピーされたシートからデータを読み取る。
 3. 読み取ったデータを設定に基づいて処理・整形し、IDの降順でソートする。
-4. 処理後のデータをPrettierで整形し、JSONファイルとして保存する。
+4. 処理後のデータをJSONファイルとして保存する。
 5. 処理完了後、コピーされた一時的なスプレッドシートをドライブから完全に削除する。
 """
 
@@ -12,9 +12,6 @@ from __future__ import annotations
 
 import json
 import re
-import shutil
-import subprocess
-import sys
 import uuid
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, NotRequired, Self, TypedDict
@@ -253,42 +250,6 @@ class SheetProcessor:
             return 0
 
 
-class JsonFormatter:
-    """Prettierを使用してJSONをフォーマットするクラス。"""
-
-    def __init__(self) -> None:
-        """JsonFormatterを初期化します。"""
-        self._command = "prettier.cmd" if sys.platform == "win32" else "prettier"
-
-    def format(self, json_string: str) -> str:
-        """JSON文字列をフォーマットします。"""
-        print("\n[情報] Prettierを使用してJSONをフォーマットします...")
-        if not shutil.which(self._command):
-            print(f"[警告] '{self._command}'コマンドが見つかりませんでした。")
-            print("[情報] JSONはフォーマットされずに出力されます。")
-            print(
-                "[情報] 'npm install -g prettier' を実行してインストールしてください。",
-            )
-            return json_string
-
-        try:
-            process = subprocess.run(  # noqa: S603
-                [self._command, "--parser", "json"],
-                input=json_string,
-                capture_output=True,
-                text=True,
-                encoding="utf-8",
-                check=True,
-            )
-        except (subprocess.CalledProcessError, FileNotFoundError) as e:
-            print(f"[エラー] Prettierの実行に失敗しました: {e}")
-            print("[情報] JSONはフォーマットされずに出力されます。")
-            return json_string
-        else:
-            print("[成功] Prettierによるフォーマットが完了しました。")
-            return process.stdout
-
-
 class SheetCopier:
     """スプレッドシートのコピーと削除を管理するコンテキストマネージャ。"""
 
@@ -390,18 +351,16 @@ def main() -> None:
             processor = SheetProcessor(CONFIG)
             processed_data = processor.process(sheet_data)
 
-            # 5. JSONに変換してフォーマット
-            raw_json_string = json.dumps(
+            # 5. JSONに変換
+            json_output = json.dumps(
                 processed_data,
                 ensure_ascii=False,
                 separators=(",", ":"),
             )
-            formatter = JsonFormatter()
-            formatted_json = formatter.format(raw_json_string)
 
             # 6. ファイルに保存
             output_path = Path(CONFIG["output_filename"])
-            output_path.write_text(formatted_json, encoding="utf-8")
+            output_path.write_text(json_output, encoding="utf-8")
             print(f"\n[成功] JSONデータを {output_path.resolve()} に保存しました。")
 
     except (OSError, HttpError, ValueError) as e:
