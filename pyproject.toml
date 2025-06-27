@@ -1,7 +1,7 @@
 [project]
 name = "imas-music-db"
 dynamic = ["version"]
-description = "imas-music-db"
+description = "アイマス楽曲データベース - Googleスプレッドシートからの自動JSON生成システム"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
