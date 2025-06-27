@@ -170,6 +170,11 @@ ignore = [
   # --- GitHub Actions実行時のログ出力のため ---
   # print文の使用を許可（ログ出力のため必要）
   "T201", # print
+
+  # --- コメント・ドキュメント関連 ---
+  # ドキュメント文字列の末尾ピリオドを強制しない
+  "D400", # missing-trailing-period
+  "D415", # missing-terminal-punctuation
 ]
 
 # 自動修正可能なルール
