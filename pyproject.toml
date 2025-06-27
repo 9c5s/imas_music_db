@@ -1,0 +1,15 @@
+[project]
+name = "imas-music-db"
+dynamic = ["version"]
+description = "imas-music-db"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "google-api-python-client>=2.174.0",
+    "google-auth>=2.40.3",
+    "google-auth-httplib2>=0.2.0",
+    "pyyaml>=6.0.2",
+]
+
+[dependency-groups]
+dev = ["python-dotenv>=1.1.1", "ruff>=0.12.0"]
