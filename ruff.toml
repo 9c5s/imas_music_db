@@ -166,6 +166,10 @@ ignore = [
 
   # コメントアウトされたコードの検出（開発中は必要）
   "ERA001", # commented-out-code
+
+  # --- GitHub Actions実行時のログ出力のため ---
+  # print文の使用を許可（ログ出力のため必要）
+  "T201", # print
 ]
 
 # 自動修正可能なルール
@@ -475,10 +479,10 @@ max-positional-args = 3
 max-public-methods = 20
 
 # 関数の最大return文数
-max-returns = 3
+max-returns = 5
 
 # 関数の最大文数
-max-statements = 30
+max-statements = 35
 
 # min-public-methods設定は現在のRuff pylintプラグインでは利用できません
 # データクラスなど、メソッドを持たないクラスは問題になりません
