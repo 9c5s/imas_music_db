@@ -1,6 +1,6 @@
-"""Googleスプレッドシートをコピーし、指定のシートからデータを取得・整形します
+"""Googleスプレッドシートをコピーし、指定のシートからデータを取得・整形する
 
-このスクリプトは以下の手順を自動で実行します:
+このスクリプトは以下の手順を自動で実行する:
 1. Google Drive APIを使用し、指定されたスプレッドシートを
    ユーザーのドライブにコピーする。
 2. Google Sheets APIを使用し、コピーされたシートからデータを読み取る。
@@ -107,7 +107,7 @@ SINGER_SPLIT_PATTERN = re.compile(r",\s*(?![^[]*\])")
 
 
 def _col_to_index(col: str) -> int:
-    """列文字(A, B, ..)を0-basedのインデックスに変換します"""
+    """列文字(A, B, ..)を0-basedのインデックスに変換する"""
     index = 0
     for char in col.upper():
         index = index * 26 + (ord(char) - ord("A") + 1)
@@ -118,12 +118,12 @@ class GoogleApiService:
     """Google DriveとSheets APIのサービスを管理するクラス"""
 
     def __init__(self) -> None:
-        """GoogleApiServiceを初期化します"""
+        """GoogleApiServiceを初期化する"""
         self.drive: Resource | None = None
         self.sheets: Resource | None = None
 
     def initialize(self) -> bool:
-        """APIサービスを初期化します"""
+        """APIサービスを初期化する"""
         print("[情報] Google APIサービスの初期化を開始します...")
         try:
             creds, _ = google.auth.default(scopes=SCOPES)
@@ -148,7 +148,7 @@ class SheetProcessor:
     """スプレッドシートの生データを処理、整形、ソートするクラス"""
 
     def __init__(self, config: Config) -> None:
-        """SheetProcessorを初期化します"""
+        """SheetProcessorを初期化する"""
         self._config = config
         self._col_map = config["column_mapping"]
         self._ignore_values = config["ignore_values"]
@@ -162,7 +162,7 @@ class SheetProcessor:
         )
 
     def process(self, sheet_data: list[list[str]]) -> list[dict[str, Any]]:
-        """シートデータを処理し、整形・ソートされたリストを返します"""
+        """シートデータを処理し、整形・ソートされたリストを返す"""
         print("\n[情報] データの処理を開始します...")
         data_start_row = self._config["data_structure"]["data_start_row"]
         start_col, end_col = self._config["data_structure"]["end_check_columns"]
@@ -186,7 +186,7 @@ class SheetProcessor:
         return processed_list
 
     def _process_row(self, row: list[str]) -> dict[str, Any]:
-        """単一の行データを処理します"""
+        """単一の行データを処理する"""
         record: dict[str, Any] = {
             key: [] if key in self._array_keys else "" for key in self._ordered_keys
         }
@@ -227,7 +227,7 @@ class SheetProcessor:
 
     @staticmethod
     def _parse_singers(value: str) -> list[str]:
-        """「歌唱」列の特殊な形式を解析し、名前のリストを返します"""
+        """「歌唱」列の特殊な形式を解析し、名前のリストを返す"""
         new_values = []
         parts = SINGER_SPLIT_PATTERN.split(value)
         for part_item in parts:
@@ -248,7 +248,7 @@ class SheetProcessor:
 
     @staticmethod
     def _sort_key(item: dict[str, Any]) -> int:
-        """ソート用のキーを返します"""
+        """ソート用のキーを返す"""
         try:
             return int(item.get("ID", 0))
         except (ValueError, TypeError):
@@ -259,13 +259,13 @@ class SheetCopier:
     """スプレッドシートのコピーと削除を管理するコンテキストマネージャ"""
 
     def __init__(self, drive_service: Resource, source_id: str) -> None:
-        """SheetCopierを初期化します"""
+        """SheetCopierを初期化する"""
         self._drive_service = drive_service
         self._source_id = source_id
         self.copied_file_id: str | None = None
 
     def __enter__(self) -> Self:
-        """コンテキストに入り、スプレッドシートをコピーします"""
+        """コンテキストに入り、スプレッドシートをコピーする"""
         print(
             f"\n[情報] スプレッドシート (ID: {self._source_id}) のコピーを"
             "開始します...",
@@ -299,7 +299,7 @@ class SheetCopier:
         exc_val: BaseException | None,
         exc_tb: TracebackType | None,
     ) -> None:
-        """コンテキストを抜け、一時ファイルを削除します"""
+        """コンテキストを抜け、一時ファイルを削除する"""
         if self.copied_file_id:
             print(f"\n[情報] 一時ファイル (ID: {self.copied_file_id}) を削除します...")
             try:
