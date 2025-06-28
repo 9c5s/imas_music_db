@@ -118,35 +118,58 @@ def monitor_pr(pr_number: int, check_interval: int = 10):
     
     last_status = None
     last_comment_count = 0
+    check_count = 0
     
     while True:
+        check_count += 1
+        timestamp = time.strftime('%H:%M:%S')
+        
+        print(f"[{timestamp}] 📡 チェック #{check_count} - PR情報を取得中...")
+        
         # PR情報を取得
         pr_info = get_pr_status(pr_number)
         if not pr_info:
-            print("❌ PR情報の取得に失敗しました")
+            print(f"[{timestamp}] ❌ PR情報の取得に失敗しました")
             time.sleep(check_interval)
             continue
+        
+        print(f"[{timestamp}] ✅ PR情報取得完了")
+        
+        # PR基本情報をログ出力
+        pr_title = pr_info.get("title", "Unknown")
+        pr_state = pr_info.get("state", "Unknown")
+        mergeable = pr_info.get("mergeable", "Unknown")
+        
+        print(f"[{timestamp}] 📋 PR情報: '{pr_title}' (状態: {pr_state}, マージ可能: {mergeable})")
         
         # チェック状況を表示
         checks = pr_info.get("statusCheckRollup", [])
         current_status = format_check_status(checks)
         
+        print(f"[{timestamp}] 🔄 チェック数: {len(checks)}個")
+        
         if current_status != last_status:
-            print(f"\n🔄 チェック状況更新 ({time.strftime('%H:%M:%S')})")
+            print(f"\n[{timestamp}] 🔄 チェック状況更新")
             print("-" * 40)
             print(current_status)
             print("-" * 40)
             last_status = current_status
+        else:
+            print(f"[{timestamp}] ⏸️  チェック状況: 変更なし")
         
         # コメントをチェック
+        print(f"[{timestamp}] 💬 コメント確認中...")
         comments = get_pr_comments(pr_number)
+        print(f"[{timestamp}] 📝 現在のコメント数: {len(comments)}個")
+        
         if len(comments) > last_comment_count:
-            print(f"\n💬 新しいコメントが追加されました ({time.strftime('%H:%M:%S')})")
+            print(f"\n[{timestamp}] 💬 新しいコメントが追加されました!")
+            print(f"[{timestamp}] 📈 コメント数: {last_comment_count} → {len(comments)}")
             
             # コード品質チェックのコメントを探す
             quality_comment = find_code_quality_comment(comments)
             if quality_comment:
-                print("📊 コード品質チェック結果:")
+                print(f"[{timestamp}] 📊 コード品質チェック結果を発見:")
                 print("-" * 40)
                 # コメントから結果部分のみを抽出して表示
                 lines = quality_comment.split('\n')
@@ -158,21 +181,38 @@ def monitor_pr(pr_number: int, check_interval: int = 10):
                     elif in_result_section and (line.startswith('✅') or line.startswith('❌')):
                         print(line)
                 print("-" * 40)
+            else:
+                print(f"[{timestamp}] 📝 一般的なコメントが追加されました")
             
             last_comment_count = len(comments)
+        else:
+            print(f"[{timestamp}] 📭 新しいコメントなし")
         
         # 全てのチェックが完了しているかを確認
+        print(f"[{timestamp}] 🔍 完了状況を確認中...")
         if checks:
-            all_complete = all(
-                check.get("state") in ["SUCCESS", "FAILURE", "NEUTRAL", "SKIPPED"] 
-                for check in checks
-            )
+            completed_checks = [
+                check for check in checks 
+                if check.get("state") in ["SUCCESS", "FAILURE", "NEUTRAL", "SKIPPED"]
+            ]
+            pending_checks = [
+                check for check in checks 
+                if check.get("state") in ["PENDING", "IN_PROGRESS"]
+            ]
+            
+            print(f"[{timestamp}] ✅ 完了済み: {len(completed_checks)}個")
+            print(f"[{timestamp}] ⏳ 実行中: {len(pending_checks)}個")
+            
+            all_complete = len(pending_checks) == 0
             if all_complete:
-                print(f"\n🎉 全てのチェックが完了しました! ({time.strftime('%H:%M:%S')})")
+                print(f"\n[{timestamp}] 🎉 全てのチェックが完了しました!")
                 break
+        else:
+            print(f"[{timestamp}] ❓ チェック情報が見つかりません")
         
         # 少し待機
-        print(f"⏳ 次回チェック: {check_interval}秒後...", end="\r")
+        print(f"[{timestamp}] ⏳ {check_interval}秒後に次回チェック...")
+        print("-" * 60)
         time.sleep(check_interval)
 
 
