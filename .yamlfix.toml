@@ -24,7 +24,6 @@ quote_basic_values = false
 quote_keys_and_basic_values = false
 
 # 配列・オブジェクトのフォーマットを厳格に
-sequence_style = "block_style"
 mapping_style = "block_style"
 
 # 真偽値の表現を厳格に
@@ -36,3 +35,13 @@ section_whitelines = 1
 
 # フロースタイルを制限
 flow_style = "forbid"
+
+# 除外するファイルパターン
+exclude = [
+    ".venv/**",
+    "venv/**", 
+    "**/__pycache__/**",
+    "*.egg-info/**",
+    ".yamllint.yml",
+    ".yamlfix.toml"
+]
