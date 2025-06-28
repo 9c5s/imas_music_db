@@ -171,8 +171,10 @@ jobs:
       - name: 9. GitHub形式でエラー表示
         run: |
           # GitHub形式で再度実行（Actions UIでの視認性向上のため）
-          uv run yamllint --format github . || true
-          uv run ruff check --output-format=github || true
+          echo "=== yamllint GitHub形式出力 ==="
+          uv run yamllint --format github . 2>&1 || true
+          echo "=== Ruff GitHub形式出力 ==="
+          uv run ruff check --output-format=github . 2>&1 || true
 
       # ステップ10: 失敗判定
       - name: 10. チェック結果の判定
