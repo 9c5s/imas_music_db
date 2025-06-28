@@ -19,3 +19,7 @@ dev = [
     "yamlfix>=1.17.0",
 ]
 
+[tool.setuptools]
+py-modules = []
+packages = []
+
