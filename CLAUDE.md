@@ -56,42 +56,54 @@ uv run yamlfix .
 - 真偽値: `true`/`false`のみ（GitHub Actions `on` は例外）
 - スペーシング・フォーマット: 厳格に統一
 
-### PR作成・監視の自動化
+### 開発タスク（uvベース）
 
 #### ワンコマンドでPR作成・監視
 ```bash
 # PR自動作成と監視（推奨）
-make pr
+./scripts.sh pr
 
 # または直接実行
 uv run python auto_pr.py
 ```
 
-#### 手動監視
+#### コード品質チェック
 ```bash
-# 最新のPRを監視
-make monitor
+# 全てのコード品質チェック
+./scripts.sh test
 
-# 特定のPR番号を監視
-make monitor-pr
+# Pythonリンティング
+./scripts.sh lint
 
-# または直接実行
-uv run python monitor_pr.py [PR番号]
+# Python自動修正
+./scripts.sh lint-fix
+
+# Pythonフォーマット
+./scripts.sh format
+
+# YAMLリンティング
+./scripts.sh yaml-lint
+
+# YAML自動修正
+./scripts.sh yaml-fix
 ```
 
-#### 開発用コマンド
+#### その他の開発コマンド
 ```bash
 # ヘルプ表示
-make help
+./scripts.sh help
 
-# 初回セットアップ
-make init
-
-# コード品質チェック
-make test
+# 開発環境セットアップ
+./scripts.sh setup
 
 # メインスクリプト実行
-make run
+./scripts.sh run
+
+# 最新PRの監視
+./scripts.sh monitor
+
+# 一時ファイル削除
+./scripts.sh clean
 ```
 
 ### 認証設定
