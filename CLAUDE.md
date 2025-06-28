@@ -56,13 +56,42 @@ uv run yamlfix .
 - 真偽値: `true`/`false`のみ（GitHub Actions `on` は例外）
 - スペーシング・フォーマット: 厳格に統一
 
-### PR監視・自動確認
+### PR作成・監視の自動化
+
+#### ワンコマンドでPR作成・監視
 ```bash
-# 最新のPRを自動監視（GitHub Actions結果とコメントを確認）
-uv run python monitor_pr.py
+# PR自動作成と監視（推奨）
+make pr
+
+# または直接実行
+uv run python auto_pr.py
+```
+
+#### 手動監視
+```bash
+# 最新のPRを監視
+make monitor
 
 # 特定のPR番号を監視
+make monitor-pr
+
+# または直接実行
 uv run python monitor_pr.py [PR番号]
+```
+
+#### 開発用コマンド
+```bash
+# ヘルプ表示
+make help
+
+# 初回セットアップ
+make init
+
+# コード品質チェック
+make test
+
+# メインスクリプト実行
+make run
 ```
 
 ### 認証設定
