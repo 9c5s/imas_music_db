@@ -27,6 +27,8 @@ uv run sheet_to_json.py
 ```
 
 ### コード品質チェック
+
+#### Pythonコード
 ```bash
 # Ruffによるリンティング
 uv run ruff check
@@ -37,6 +39,22 @@ uv run ruff check --fix
 # フォーマッティング
 uv run ruff format
 ```
+
+#### YAMLファイル（厳格ルール）
+```bash
+# yamllintによるリンティング（厳格設定）
+uv run yamllint .
+
+# yamlfixによる自動フォーマット（厳格設定）
+uv run yamlfix .
+```
+
+**厳格ルール詳細:**
+- 行長制限: 80文字
+- インデント: 一貫したスペース数
+- ドキュメント開始: `---` 必須
+- 真偽値: `true`/`false`のみ（GitHub Actions `on` は例外）
+- スペーシング・フォーマット: 厳格に統一
 
 ### 認証設定
 ```bash
@@ -93,6 +111,17 @@ gcloud auth application-default login
    - PrettierでJSONフォーマット
    - dataブランチに変更をコミット・プッシュ
    - 新しいリリースを作成・JSONファイルを添付
+
+### コード品質チェックワークフロー
+
+プルリクエスト作成時に以下のワークフローが自動実行されます：
+
+**`code_quality.yml`**: 統合コード品質チェック（PRコメント付き）
+- PythonファイルのRuffリンティング・フォーマットチェック
+- YAMLファイルのyamllintチェック
+- チェック結果をPRにコメントとして投稿
+- 統計情報と修正方法の表示
+- GitHub Actions UI上でのエラー表示
 
 ### ブランチ構成・開発フロー
 
