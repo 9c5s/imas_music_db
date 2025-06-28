@@ -163,8 +163,8 @@ jobs:
       - name: 8. PR コメントを投稿
         uses: thollander/actions-comment-pull-request@v3
         with:
-          filePath: combined_report.md
-          comment_tag: code_quality_check
+          file-path: combined_report.md
+          comment-tag: code_quality_check
           mode: recreate
 
       # ステップ9: GitHub形式でエラーを表示
