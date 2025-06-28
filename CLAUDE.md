@@ -56,10 +56,22 @@ uv run yamlfix .
 - 真偽値: `true`/`false`のみ（GitHub Actions `on` は例外）
 - スペーシング・フォーマット: 厳格に統一
 
+### PR監視・自動確認
+```bash
+# 最新のPRを自動監視（GitHub Actions結果とコメントを確認）
+uv run python monitor_pr.py
+
+# 特定のPR番号を監視
+uv run python monitor_pr.py [PR番号]
+```
+
 ### 認証設定
 ```bash
 # Google Cloud認証（初回のみ）
 gcloud auth application-default login
+
+# GitHub CLI認証（初回のみ）
+gh auth login
 ```
 
 ## システムアーキテクチャ
