@@ -27,6 +27,8 @@ uv run sheet_to_json.py
 ```
 
 ### コード品質チェック
+
+#### Pythonコード
 ```bash
 # Ruffによるリンティング
 uv run ruff check
@@ -36,6 +38,75 @@ uv run ruff check --fix
 
 # フォーマッティング
 uv run ruff format
+```
+
+#### YAMLファイル（厳格ルール）
+```bash
+# yamllintによるリンティング（厳格設定）
+uv run yamllint .
+
+# yamlfixによる自動フォーマット（厳格設定）
+uv run yamlfix .
+```
+
+**厳格ルール詳細:**
+- 行長制限: 80文字
+- インデント: 一貫したスペース数
+- ドキュメント開始: `---` 必須
+- 真偽値: `true`/`false`のみ（GitHub Actions `on` は例外）
+- スペーシング・フォーマット: 厳格に統一
+
+### 開発タスク（uvベース）
+
+#### ワンコマンドでPR作成・監視
+```bash
+# PR自動作成と監視（推奨）
+./scripts.sh pr
+
+# または直接実行
+uv run python auto_pr.py
+```
+
+#### コード品質チェック
+```bash
+# 全てのコード品質チェック
+./scripts.sh test
+
+# Pythonリンティング
+./scripts.sh lint
+
+# Python自動修正
+./scripts.sh lint-fix
+
+# Pythonフォーマット
+./scripts.sh format
+
+# YAMLリンティング
+./scripts.sh yaml-lint
+
+# YAML自動修正
+./scripts.sh yaml-fix
+```
+
+#### その他の開発コマンド
+```bash
+# ヘルプ表示
+./scripts.sh help
+
+# 開発環境セットアップ
+./scripts.sh setup
+
+# メインスクリプト実行
+./scripts.sh run
+
+# 最新PRの監視
+./scripts.sh monitor
+
+# 一時ファイル削除
+./scripts.sh clean
+
+# ワークフローエラーの自動修正
+uv run python fix_workflow_errors.py
 ```
 
 ### 認証設定
@@ -59,6 +130,12 @@ gcloud auth application-default login
 3. **SheetProcessor** (`sheet_to_json.py:142-`)
    - スプレッドシートの生データを設定に基づいて処理・整形
    - IDの降順ソート、配列フィールドの統合処理
+
+4. **WorkflowErrorFixer** (`fix_workflow_errors.py`)
+   - GitHub Actionsのコード品質チェックエラーを自動修正
+   - Ruffフォーマット・リンティングエラーの自動修正
+   - YAMLエラーの自動修正
+   - 修正のコミット・プッシュと結果確認
 
 ### データフロー
 
@@ -93,6 +170,17 @@ gcloud auth application-default login
    - PrettierでJSONフォーマット
    - dataブランチに変更をコミット・プッシュ
    - 新しいリリースを作成・JSONファイルを添付
+
+### コード品質チェックワークフロー
+
+プルリクエスト作成時に以下のワークフローが自動実行されます：
+
+**`code_quality.yml`**: 統合コード品質チェック（PRコメント付き）
+- PythonファイルのRuffリンティング・フォーマットチェック
+- YAMLファイルのyamllintチェック
+- チェック結果をPRにコメントとして投稿
+- 統計情報と修正方法の表示
+- GitHub Actions UI上でのエラー表示
 
 ### ブランチ構成・開発フロー
 
