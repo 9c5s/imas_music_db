@@ -1,0 +1,188 @@
+---
+# ワークフローの名前
+name: コード品質チェック
+# プルリクエスト時にトリガーされる
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    # PythonまたはYAMLファイルが変更された場合のみ実行
+    paths:
+      - '**.py'
+      - '**.yml'
+      - '**.yaml'
+      - pyproject.toml
+      - ruff.toml
+      - .yamllint.yml
+      - .yamlfix.toml
+      - .github/workflows/code_quality.yml
+jobs:
+  code-quality:
+    runs-on: ubuntu-latest
+    name: コード品質チェック
+    # PRコメントを投稿するための権限
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      # ステップ1: コードをチェックアウト
+      - name: 1. リポジトリをチェックアウト
+        uses: actions/checkout@v4
+
+      # ステップ2: Pythonのセットアップ
+      - name: 2. Python環境のセットアップ
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      # ステップ3: uvをインストール（高速なPythonパッケージマネージャー）
+      - name: 3. uvのインストール
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: pyproject.toml
+
+      # ステップ4: 依存関係のインストール（開発依存関係を含む）
+      - name: 4. 依存関係のインストール
+        run: |
+          uv sync
+
+      # ステップ5: YAMLチェックの実行
+      - name: 5. YAMLチェック実行
+        id: yaml_check
+        run: |
+          # YAMLチェックの結果を保存
+          echo "## 📄 YAMLコード品質チェック結果" > yaml_report.md
+          echo "" >> yaml_report.md
+
+          # yamllintチェック
+          echo "### yamllint結果" >> yaml_report.md
+          if uv run yamllint . > yaml_lint_output.txt 2>&1; then
+            echo "✅ yamllint: エラーなし" >> yaml_report.md
+            YAML_LINT_STATUS=0
+          else
+            echo "❌ yamllint: エラーあり" >> yaml_report.md
+            echo '```' >> yaml_report.md
+            cat yaml_lint_output.txt >> yaml_report.md
+            echo '```' >> yaml_report.md
+            YAML_LINT_STATUS=1
+          fi
+          echo "" >> yaml_report.md
+
+          # 修正方法
+          if [ $YAML_LINT_STATUS -ne 0 ]; then
+            echo "### 💡 YAML修正方法" >> yaml_report.md
+            echo "以下のコマンドをローカルで実行してください：" >> yaml_report.md
+            echo '```bash' >> yaml_report.md
+            echo "# YAMLフォーマットの自動修正" >> yaml_report.md
+            echo "uv run yamlfix ." >> yaml_report.md
+            echo "" >> yaml_report.md
+            echo "# yamllintチェック" >> yaml_report.md
+            echo "uv run yamllint ." >> yaml_report.md
+            echo '```' >> yaml_report.md
+          fi
+
+          # 結果を出力に保存
+          echo "YAML_LINT_STATUS=$YAML_LINT_STATUS" >> $GITHUB_OUTPUT
+        continue-on-error: true
+
+      # ステップ6: Ruffチェックの実行と結果の保存
+      - name: 6. Ruffチェック実行
+        id: ruff_check
+        run: |
+          # Ruffチェックの結果を保存
+          echo "## 🔍 Ruffコード品質チェック結果" > ruff_report.md
+          echo "" >> ruff_report.md
+
+          # リンティング
+          echo "### リンティング結果" >> ruff_report.md
+          if uv run ruff check \
+            > ruff_lint_output.txt 2>&1; then
+            echo "✅ リンティング: エラーなし" >> ruff_report.md
+            LINT_STATUS=0
+          else
+            echo "❌ リンティング: エラーあり" >> ruff_report.md
+            echo '```' >> ruff_report.md
+            cat ruff_lint_output.txt >> ruff_report.md
+            echo '```' >> ruff_report.md
+            LINT_STATUS=1
+          fi
+          echo "" >> ruff_report.md
+
+          # フォーマットチェック
+          echo "### フォーマットチェック結果" >> ruff_report.md
+          if uv run ruff format --check --diff \
+            > ruff_format_output.txt 2>&1; then
+            echo "✅ フォーマット: 問題なし" >> ruff_report.md
+            FORMAT_STATUS=0
+          else
+            echo "❌ フォーマット: 修正が必要" >> ruff_report.md
+            echo '```diff' >> ruff_report.md
+            cat ruff_format_output.txt >> ruff_report.md
+            echo '```' >> ruff_report.md
+            FORMAT_STATUS=1
+          fi
+          echo "" >> ruff_report.md
+
+          # 統計情報
+          echo "### 統計情報" >> ruff_report.md
+          echo '```' >> ruff_report.md
+          uv run ruff check --statistics >> ruff_report.md 2>&1 || true
+          echo '```' >> ruff_report.md
+          echo "" >> ruff_report.md
+
+          # 修正方法
+          if [ $LINT_STATUS -ne 0 ] || [ $FORMAT_STATUS -ne 0 ]; then
+            echo "### 💡 Python修正方法" >> ruff_report.md
+            echo "以下のコマンドをローカルで実行してください：" >> ruff_report.md
+            echo '```bash' >> ruff_report.md
+            if [ $LINT_STATUS -ne 0 ]; then
+              echo "# リンティングエラーの自動修正" >> ruff_report.md
+              echo "uv run ruff check --fix" >> ruff_report.md
+            fi
+            if [ $FORMAT_STATUS -ne 0 ]; then
+              echo "# フォーマットの自動修正" >> ruff_report.md
+              echo "uv run ruff format" >> ruff_report.md
+            fi
+            echo '```' >> ruff_report.md
+          fi
+
+          # 結果を出力に保存
+          echo "LINT_STATUS=$LINT_STATUS" >> $GITHUB_OUTPUT
+          echo "FORMAT_STATUS=$FORMAT_STATUS" >> $GITHUB_OUTPUT
+        continue-on-error: true
+
+      # ステップ7: レポートを統合
+      - name: 7. レポート統合
+        run: |
+          # YAMLとRuffのレポートを統合
+          cat yaml_report.md > combined_report.md
+          echo "" >> combined_report.md
+          cat ruff_report.md >> combined_report.md
+
+      # ステップ8: PRにコメントを投稿
+      - name: 8. PR コメントを投稿
+        uses: thollander/actions-comment-pull-request@v3
+        with:
+          file-path: combined_report.md
+          comment-tag: code_quality_check
+          mode: recreate
+
+      # ステップ9: GitHub形式でエラーを表示
+      - name: 9. GitHub形式でエラー表示
+        run: |
+          # GitHub形式で再度実行（Actions UIでの視認性向上のため）
+          echo "=== yamllint GitHub形式出力 ==="
+          uv run yamllint --format github . 2>&1 || true
+          echo "=== Ruff GitHub形式出力 ==="
+          uv run ruff check --output-format=github . 2>&1 || true
+
+      # ステップ10: 失敗判定
+      - name: 10. チェック結果の判定
+        if: >-
+          steps.yaml_check.outputs.YAML_LINT_STATUS != '0' ||
+          steps.ruff_check.outputs.LINT_STATUS != '0' ||
+          steps.ruff_check.outputs.FORMAT_STATUS != '0'
+        run: |-
+          echo "❌ コード品質チェックでエラーが検出されました。"
+          echo "詳細はPRのコメントを確認してください。"
+          exit 1
