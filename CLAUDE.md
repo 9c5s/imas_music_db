@@ -104,6 +104,9 @@ uv run python auto_pr.py
 
 # 一時ファイル削除
 ./scripts.sh clean
+
+# ワークフローエラーの自動修正
+uv run python fix_workflow_errors.py
 ```
 
 ### 認証設定
@@ -130,6 +133,12 @@ gh auth login
 3. **SheetProcessor** (`sheet_to_json.py:142-`)
    - スプレッドシートの生データを設定に基づいて処理・整形
    - IDの降順ソート、配列フィールドの統合処理
+
+4. **WorkflowErrorFixer** (`fix_workflow_errors.py`)
+   - GitHub Actionsのコード品質チェックエラーを自動修正
+   - Ruffフォーマット・リンティングエラーの自動修正
+   - YAMLエラーの自動修正
+   - 修正のコミット・プッシュと結果確認
 
 ### データフロー
 
