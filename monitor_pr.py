@@ -6,6 +6,7 @@
 
     PR番号を指定しない場合は最新のPRを監視
 """
+
 from __future__ import annotations
 
 import json

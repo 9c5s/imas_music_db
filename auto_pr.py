@@ -9,6 +9,7 @@
     2. 作成されたPRを自動監視
     3. GitHub Actions完了まで待機
 """
+
 from __future__ import annotations
 
 import argparse
