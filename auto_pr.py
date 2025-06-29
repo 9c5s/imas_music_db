@@ -21,7 +21,10 @@ import time
 
 
 class AutoPR:
-    def __init__(self):
+    """PR作成と監視を自動化するクラス"""
+
+    def __init__(self) -> None:
+        """初期化処理"""
         self.monitoring = False
         self.monitor_thread = None
 
@@ -45,7 +48,7 @@ class AutoPR:
         return None
 
     def check_git_status(self) -> bool:
-        """Gitの状態をチェック（コミットされていない変更がないか）"""
+        """Gitの状態をチェック(コミットされていない変更がないか)"""
         success, output = self.run_command(["git", "status", "--porcelain"])
         if not success:
             return False
@@ -97,8 +100,8 @@ class AutoPR:
             print(f"❌ PR番号の取得に失敗しました: {output}")
             return None
 
-    def start_monitoring(self, pr_number: int):
-        """PRの監視を開始（別スレッドで実行）"""
+    def start_monitoring(self, pr_number: int) -> None:
+        """PRの監視を開始(別スレッドで実行)"""
         print(f"\n🔍 PR#{pr_number} の監視を開始します...")
         print("⏰ Ctrl+C で監視を停止できます")
         print("=" * 60)
@@ -118,7 +121,7 @@ class AutoPR:
             print(f"\n\n👋 PR#{pr_number} の監視を停止しました")
             self.monitoring = False
 
-    def _run_monitor(self, pr_number: int):
+    def _run_monitor(self, pr_number: int) -> None:
         """監視スクリプトを実行"""
         try:
             # uvを使ってmonitor_pr.pyを実行
@@ -176,7 +179,7 @@ class AutoPR:
 
         return title, "\n".join(body_parts)
 
-    def run(self, title: str | None = None, body: str | None = None):
+    def run(self, title: str | None = None, body: str | None = None) -> bool:
         """メイン処理"""
         print("🤖 PR自動作成・監視ツール")
         print("=" * 50)
@@ -202,7 +205,7 @@ class AutoPR:
         print(f"説明: {body[:100]}...")
 
         # 確認
-        response = input("\n❓ このPRを作成しますか？ (y/N): ")
+        response = input("\n? このPRを作成しますか? (y/N): ")
         if response.lower() not in ["y", "yes"]:
             print("❌ PR作成をキャンセルしました")
             return False
@@ -217,14 +220,14 @@ class AutoPR:
         return True
 
 
-def main():
+def main() -> None:
     """メイン関数"""
     parser = argparse.ArgumentParser(description="PR作成と監視を自動化するスクリプト")
     parser.add_argument(
-        "--title", "-t", help="PRタイトル（指定しない場合はブランチ名から自動生成）"
+        "--title", "-t", help="PRタイトル(指定しない場合はブランチ名から自動生成)"
     )
     parser.add_argument(
-        "--body", "-b", help="PR説明（指定しない場合は最近のコミットから自動生成）"
+        "--body", "-b", help="PR説明(指定しない場合は最近のコミットから自動生成)"
     )
     parser.add_argument(
         "--no-monitor", "-n", action="store_true", help="監視を行わずPR作成のみ実行"
@@ -243,7 +246,7 @@ def main():
     # 自動PRツールを実行
     auto_pr = AutoPR()
 
-    def signal_handler(signum, frame):
+    def signal_handler(signum: int, frame) -> None:
         print("\n\n👋 処理を中断しました")
         auto_pr.monitoring = False
         sys.exit(0)

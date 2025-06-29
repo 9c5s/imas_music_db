@@ -108,7 +108,7 @@ def find_code_quality_comment(comments: list[dict]) -> str | None:
     return None
 
 
-def monitor_pr(pr_number: int, check_interval: int = 10):
+def monitor_pr(pr_number: int, check_interval: int = 10) -> None:
     """PRを監視してリアルタイムで状況を表示する"""
     print(f"🔍 PR#{pr_number} の監視を開始します...", flush=True)
     print(f"⏰ {check_interval}秒間隔でチェックします", flush=True)
@@ -141,7 +141,8 @@ def monitor_pr(pr_number: int, check_interval: int = 10):
         mergeable = pr_info.get("mergeable", "Unknown")
 
         print(
-            f"[{timestamp}] 📋 PR情報: '{pr_title}' (状態: {pr_state}, マージ可能: {mergeable})",
+            f"[{timestamp}] 📋 PR情報: '{pr_title}' (状態: {pr_state}, "
+            f"マージ可能: {mergeable})",
             flush=True,
         )
 
@@ -181,11 +182,11 @@ def monitor_pr(pr_number: int, check_interval: int = 10):
                 lines = quality_comment.split("\n")
                 in_result_section = False
                 for line in lines:
-                    if line.startswith("##") or line.startswith("###"):
+                    if line.startswith(("##", "###")):
                         in_result_section = True
                         print(line, flush=True)
                     elif in_result_section and (
-                        line.startswith("✅") or line.startswith("❌")
+                        line.startswith(("✅", "❌"))
                     ):
                         print(line, flush=True)
                 print("-" * 40, flush=True)
@@ -226,7 +227,7 @@ def monitor_pr(pr_number: int, check_interval: int = 10):
         time.sleep(check_interval)
 
 
-def main():
+def main() -> None:
     """メイン処理"""
     # PR番号を取得
     if len(sys.argv) > 1:
@@ -248,7 +249,8 @@ def main():
         subprocess.run(["gh", "--version"], capture_output=True, check=True)
     except (subprocess.CalledProcessError, FileNotFoundError):
         print(
-            "❌ エラー: GitHub CLI (gh) がインストールされていないか、認証されていません",
+            "❌ エラー: GitHub CLI (gh) がインストールされていないか、"
+            "認証されていません",
             flush=True,
         )
         print("💡 'gh auth login' を実行してください", flush=True)

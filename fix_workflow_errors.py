@@ -153,7 +153,7 @@ class WorkflowErrorFixer:
         # 自動修正可能なエラーを修正
         success, output = self.run_command(["uv", "run", "ruff", "check", "--fix"])
         if success:
-            self.errors_fixed.append("Ruffリンティング修正（自動修正可能分）")
+            self.errors_fixed.append("Ruffリンティング修正(自動修正可能分)")
             print("✅ 自動修正可能なエラーを修正しました")
 
         # 残りのエラーを確認
@@ -273,7 +273,7 @@ Co-Authored-By: Workflow Error Fixer <noreply@github.com>"""
         run_id = latest_run.get("databaseId")
         print(f"🔍 ワークフロー実行 #{run_id} を監視中...")
 
-        # ワークフローが完了するまで待機（最大5分）
+        # ワークフローが完了するまで待機(最大5分)
         max_wait = 300  # 5分
         check_interval = 10
         elapsed = 0
@@ -295,7 +295,7 @@ Co-Authored-By: Workflow Error Fixer <noreply@github.com>"""
 
                     if status == "completed":
                         if conclusion == "success":
-                            print("✅ ワークフローが成功しました！")
+                            print("✅ ワークフローが成功しました!")
                             return True
                         print(f"❌ ワークフローが失敗しました: {conclusion}")
                         return False
@@ -353,25 +353,21 @@ Co-Authored-By: Workflow Error Fixer <noreply@github.com>"""
             fixed_any = True
 
         # Ruffフォーマットエラー
-        if errors["ruff_format"]:
-            if self.fix_ruff_format_errors():
-                fixed_any = True
+        if errors["ruff_format"] and self.fix_ruff_format_errors():
+            fixed_any = True
 
         # Ruffリンティングエラー
-        if errors["ruff_lint"]:
-            if self.fix_ruff_lint_errors():
-                fixed_any = True
+        if errors["ruff_lint"] and self.fix_ruff_lint_errors():
+            fixed_any = True
 
         # YAMLエラー
-        if errors["yaml_lint"]:
-            if self.fix_yaml_errors():
-                fixed_any = True
+        if errors["yaml_lint"] and self.fix_yaml_errors():
+            fixed_any = True
 
         # 修正をコミット・プッシュ
-        if fixed_any:
-            if self.commit_and_push_fixes():
-                # 修正結果を確認
-                return self.verify_fixes()
+        if fixed_any and self.commit_and_push_fixes():
+            # 修正結果を確認
+            return self.verify_fixes()
 
         return fixed_any
 
