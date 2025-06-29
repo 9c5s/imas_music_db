@@ -246,7 +246,7 @@ def main() -> None:
     # 自動PRツールを実行
     auto_pr = AutoPR()
 
-    def signal_handler(signum: int, frame) -> None:
+    def signal_handler(signum: int, frame: object) -> None:
         print("\n\n👋 処理を中断しました")
         auto_pr.monitoring = False
         sys.exit(0)

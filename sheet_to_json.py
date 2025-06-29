@@ -373,7 +373,7 @@ def main() -> None:
     except (OSError, HttpError, ValueError) as e:
         print(f"\n[エラー] メイン処理で予期せぬエラーが発生しました: {e}")
 
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         print(
             f"\n[エラー] 予期せぬ重大なエラーが発生しました ({type(e).__name__}): {e}",
         )
