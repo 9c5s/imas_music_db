@@ -185,9 +185,7 @@ def monitor_pr(pr_number: int, check_interval: int = 10) -> None:
                     if line.startswith(("##", "###")):
                         in_result_section = True
                         print(line, flush=True)
-                    elif in_result_section and (
-                        line.startswith(("✅", "❌"))
-                    ):
+                    elif in_result_section and (line.startswith(("✅", "❌"))):
                         print(line, flush=True)
                 print("-" * 40, flush=True)
             else:
