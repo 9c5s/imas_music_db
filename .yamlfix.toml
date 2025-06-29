@@ -1,0 +1,47 @@
+---
+# yamlfix設定ファイル（最も厳格な設定）
+
+# 基本設定
+line_length = 80
+preserve_quotes = true
+sequence_style = "block_style"
+none_representation = "null"
+
+# インデント設定
+indent = 2
+offset = 2
+
+# ドキュメント開始/終了を厳格に
+explicit_start = true
+explicit_end = false
+
+# コメント設定を厳格に
+comments_min_spaces_from_content = 2
+comments_require_starting_space = true
+
+# クォート設定を厳格に（一貫性を保つ）
+quote_basic_values = false
+quote_keys_and_basic_values = false
+
+# 配列・オブジェクトのフォーマットを厳格に
+mapping_style = "block_style"
+
+# 真偽値の表現を厳格に
+truthy_values = ["true", "false"]
+
+# スペーシングを厳格に
+allow_duplicate_keys = false
+section_whitelines = 1
+
+# フロースタイルを制限
+flow_style = "forbid"
+
+# 除外するファイルパターン
+exclude = [
+    ".venv/**",
+    "venv/**", 
+    "**/__pycache__/**",
+    "*.egg-info/**",
+    ".yamllint.yml",
+    ".yamlfix.toml"
+]

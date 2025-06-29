@@ -1,0 +1,98 @@
+---
+# yamllint設定ファイル（最も厳格な設定）
+extends: default
+rules:
+  # 行の長さ制限を厳格に（80文字）
+  line-length:
+    max: 80
+    level: error
+
+  # 空行の数を厳格に制限
+  empty-lines:
+    max: 1
+    max-start: 0
+    max-end: 1
+    level: error
+
+  # コメントのインデントを厳格に要求
+  comments-indentation:
+    level: error
+
+  # ドキュメント開始の---を必須にする
+  document-start:
+    present: true
+    level: error
+
+  # ドキュメント終了の...を禁止
+  document-end:
+    present: false
+    level: error
+
+  # インデント設定を厳格に（GitHub Actions対応）
+  indentation:
+    spaces: consistent
+    indent-sequences: consistent
+    check-multi-line-strings: false
+    level: error
+
+  # 末尾のスペースを厳格に禁止
+  trailing-spaces:
+    level: error
+
+  # 真偽値を厳格に制限（GitHub Actions用）
+  truthy:
+    allowed-values: ['true', 'false', 'on']
+    check-keys: false
+    level: error
+
+  # 括弧のスペーシングを厳格に
+  brackets:
+    min-spaces-inside: 0
+    max-spaces-inside: 0
+    min-spaces-inside-empty: 0
+    max-spaces-inside-empty: 0
+    level: error
+
+  # 波括弧のスペーシングを厳格に
+  braces:
+    min-spaces-inside: 0
+    max-spaces-inside: 0
+    min-spaces-inside-empty: 0
+    max-spaces-inside-empty: 0
+    level: error
+
+  # コロンのスペーシングを厳格に
+  colons:
+    max-spaces-before: 0
+    max-spaces-after: 1
+    level: error
+
+  # カンマのスペーシングを厳格に
+  commas:
+    max-spaces-before: 0
+    max-spaces-after: 1
+    level: error
+
+  # ハイフンのインデントを厳格に
+  hyphens:
+    max-spaces-after: 1
+    level: error
+
+  # 重複キーを厳格に禁止
+  key-duplicates:
+    level: error
+
+  # ファイル末尾の改行を厳格に要求
+  new-line-at-end-of-file:
+    level: error
+
+  # コメントの前のスペースを厳格に要求
+  comments:
+    min-spaces-from-content: 2
+    level: error
+# 除外するファイルパターン
+ignore: |-
+  .venv/
+  venv/
+  __pycache__/
+  *.egg-info/
