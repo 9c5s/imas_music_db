@@ -95,7 +95,7 @@ jobs:
 
           # リンティング
           echo "### リンティング結果" >> ruff_report.md
-          if uv run ruff check --output-format=text \
+          if uv run ruff check \
             > ruff_lint_output.txt 2>&1; then
             echo "✅ リンティング: エラーなし" >> ruff_report.md
             LINT_STATUS=0
