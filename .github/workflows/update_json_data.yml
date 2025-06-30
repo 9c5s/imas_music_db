@@ -1,13 +1,12 @@
+---
 # ワークフローの名前
 name: JSONデータ更新 (Workload Identity連携)
-
 on:
   schedule:
     # 日本時間午前9時に毎日実行 (UTCの午前0時)
-    - cron: "0 0 * * *"
+    - cron: 0 0 * * *
   # GitHubのUIから手動で実行できるようにする
   workflow_dispatch:
-
 jobs:
   update-and-release:
     runs-on: ubuntu-latest
@@ -17,7 +16,6 @@ jobs:
       contents: write
       # Workload Identity連携によるGoogle Cloudへの認証のために必要
       id-token: write
-
     steps:
       # ステップ1: スクリプトが格納されているブランチ(master)をチェックアウトする
       - name: 1. スクリプト用リポジトリをチェックアウト (master)
@@ -32,14 +30,15 @@ jobs:
         uses: google-github-actions/auth@v2
         with:
           # GitHub Secretsに設定した値を参照する
-          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          workload_identity_provider: >-
+            ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
 
       # ステップ3: Pythonの実行環境をセットアップする
       - name: 3. Python環境のセットアップ
         uses: actions/setup-python@v5
         with:
-          python-version: "3.13"
+          python-version: '3.13'
 
       # ステップ4: Pythonスクリプトの実行に必要なライブラリをインストールする
       - name: 4. 依存ライブラリのインストール
@@ -68,7 +67,7 @@ jobs:
         if: steps.generate_json.outputs.JSON_EXISTS == 'true'
         uses: actions/setup-node@v4
         with:
-          node-version: "20" # LTS版のNode.jsを使用
+          node-version: '20'  # LTS版のNode.jsを使用
 
       # ステップ7: PrettierでJSONファイルをフォーマットする
       - name: 7. PrettierでJSONをフォーマット
@@ -95,7 +94,8 @@ jobs:
           echo "committed=false" >> $GITHUB_OUTPUT
 
           # 生成されたJSONファイルをデータ用のディレクトリにコピー
-          cp ${{ steps.generate_json.outputs.json_file_path }} ./data_repo/imas_music_db.json
+          cp ${{ steps.generate_json.outputs.json_file_path }} \
+            ./data_repo/imas_music_db.json
 
           # データ用のディレクトリに移動
           cd ./data_repo
@@ -112,7 +112,6 @@ jobs:
             # コミットメッセージとタグ名用の日付を生成 (JST)
             COMMIT_DATE_JST=$(TZ=Asia/Tokyo date +'%Y-%m-%d %H:%M:%S')
             TAG_NAME=$(TZ=Asia/Tokyo date +'%Y%m%d-%H%M%S')
-
             git commit -m "📊 データ自動更新: ${COMMIT_DATE_JST} (JST)"
             git push origin data
             echo "✅ dataブランチにコミットをプッシュしました。"
