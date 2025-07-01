@@ -44,30 +44,30 @@ case "${1:-help}" in
         ;;
     "lint")
         echo "🔍 Pythonコードをリンティング中..."
-        uv run ruff check
+        uv run ruff check --config config/ruff.toml
         ;;
     "lint-fix")
         echo "🔧 Pythonコードをリンティング（自動修正）中..."
-        uv run ruff check --fix
+        uv run ruff check --fix --config config/ruff.toml
         ;;
     "format")
         echo "💅 Pythonコードをフォーマット中..."
-        uv run ruff format
+        uv run ruff format --config config/ruff.toml
         ;;
     "yaml-lint")
         echo "📄 YAMLファイルをリンティング中..."
-        uv run yamllint .
+        uv run yamllint -c config/yamllint.yml .
         ;;
     "yaml-fix")
         echo "🔧 YAMLファイルを自動修正中..."
-        uv run yamlfix .
+        uv run yamlfix -c config/yamlfix.toml .
         ;;
     "test")
         echo "🧪 全てのコード品質チェックを実行中..."
         echo "--- Pythonリンティング ---"
-        uv run ruff check
+        uv run ruff check --config config/ruff.toml
         echo "--- YAMLリンティング ---"
-        uv run yamllint .
+        uv run yamllint -c config/yamllint.yml .
         echo "✅ 全てのコード品質チェックが完了しました"
         ;;
     "run")

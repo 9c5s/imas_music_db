@@ -1,6 +1,7 @@
 ---
 # yamllint設定ファイル（最も厳格な設定）
 extends: default
+
 rules:
   # 行の長さ制限を厳格に（80文字）
   line-length:
@@ -41,7 +42,10 @@ rules:
 
   # 真偽値を厳格に制限（GitHub Actions用）
   truthy:
-    allowed-values: ['true', 'false', 'on']
+    allowed-values:
+      - 'true'
+      - 'false'
+      - 'on'
     check-keys: false
     level: error
 
@@ -90,6 +94,7 @@ rules:
   comments:
     min-spaces-from-content: 2
     level: error
+
 # 除外するファイルパターン
 ignore: |-
   .venv/

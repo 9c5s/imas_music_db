@@ -11,9 +11,9 @@ on:
       - '**.yml'
       - '**.yaml'
       - pyproject.toml
-      - ruff.toml
-      - .yamllint.yml
-      - .yamlfix.toml
+      - config/ruff.toml
+      - config/yamllint.yml
+      - config/yamlfix.toml
       - .github/workflows/code_quality.yml
 jobs:
   code-quality:
@@ -56,7 +56,8 @@ jobs:
 
           # yamllintチェック
           echo "### yamllint結果" >> yaml_report.md
-          if uv run yamllint . > yaml_lint_output.txt 2>&1; then
+          if uv run yamllint -c config/yamllint.yml . >\
+            yaml_lint_output.txt 2>&1; then
             echo "✅ yamllint: エラーなし" >> yaml_report.md
             YAML_LINT_STATUS=0
           else
@@ -74,10 +75,10 @@ jobs:
             echo "以下のコマンドをローカルで実行してください：" >> yaml_report.md
             echo '```bash' >> yaml_report.md
             echo "# YAMLフォーマットの自動修正" >> yaml_report.md
-            echo "uv run yamlfix ." >> yaml_report.md
+            echo "uv run yamlfix -c config/yamlfix.toml ." >> yaml_report.md
             echo "" >> yaml_report.md
             echo "# yamllintチェック" >> yaml_report.md
-            echo "uv run yamllint ." >> yaml_report.md
+            echo "uv run yamllint -c config/yamllint.yml ." >> yaml_report.md
             echo '```' >> yaml_report.md
           fi
 
@@ -95,8 +96,8 @@ jobs:
 
           # リンティング
           echo "### リンティング結果" >> ruff_report.md
-          if uv run ruff check \
-            > ruff_lint_output.txt 2>&1; then
+          if uv run ruff check --config config/ruff.toml >\
+            ruff_lint_output.txt 2>&1; then
             echo "✅ リンティング: エラーなし" >> ruff_report.md
             LINT_STATUS=0
           else
@@ -110,8 +111,8 @@ jobs:
 
           # フォーマットチェック
           echo "### フォーマットチェック結果" >> ruff_report.md
-          if uv run ruff format --check --diff \
-            > ruff_format_output.txt 2>&1; then
+          if uv run ruff format --config config/ruff.toml \
+            --check --diff > ruff_format_output.txt 2>&1; then
             echo "✅ フォーマット: 問題なし" >> ruff_report.md
             FORMAT_STATUS=0
           else
@@ -126,7 +127,8 @@ jobs:
           # 統計情報
           echo "### 統計情報" >> ruff_report.md
           echo '```' >> ruff_report.md
-          uv run ruff check --statistics >> ruff_report.md 2>&1 || true
+          uv run ruff check --config config/ruff.toml \
+            --statistics >> ruff_report.md 2>&1 || true
           echo '```' >> ruff_report.md
           echo "" >> ruff_report.md
 
@@ -137,11 +139,13 @@ jobs:
             echo '```bash' >> ruff_report.md
             if [ $LINT_STATUS -ne 0 ]; then
               echo "# リンティングエラーの自動修正" >> ruff_report.md
-              echo "uv run ruff check --fix" >> ruff_report.md
+              echo "uv run ruff check --fix \\" >> ruff_report.md
+              echo "  --config config/ruff.toml" >> ruff_report.md
             fi
             if [ $FORMAT_STATUS -ne 0 ]; then
               echo "# フォーマットの自動修正" >> ruff_report.md
-              echo "uv run ruff format" >> ruff_report.md
+              echo "uv run ruff format \\" >> ruff_report.md
+              echo "  --config config/ruff.toml" >> ruff_report.md
             fi
             echo '```' >> ruff_report.md
           fi
@@ -172,9 +176,11 @@ jobs:
         run: |
           # GitHub形式で再度実行（Actions UIでの視認性向上のため）
           echo "=== yamllint GitHub形式出力 ==="
-          uv run yamllint --format github . 2>&1 || true
+          uv run yamllint -c config/yamllint.yml \
+            --format github . 2>&1 || true
           echo "=== Ruff GitHub形式出力 ==="
-          uv run ruff check --output-format=github . 2>&1 || true
+          uv run ruff check --config config/ruff.toml \
+            --output-format=github . 2>&1 || true
 
       # ステップ10: 失敗判定
       - name: 10. チェック結果の判定
