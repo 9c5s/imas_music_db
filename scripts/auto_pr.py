@@ -28,13 +28,13 @@ class AutoPR:
         self.monitoring = False
         self.monitor_thread = None
 
-    def run_command(self, cmd: list, capture_output: bool = True) -> tuple:
+    def run_command(self, cmd: list, *, capture_output: bool = True) -> tuple:
         """コマンドを実行して結果を返す"""
         try:
             if capture_output:
                 result = subprocess.run(cmd, capture_output=True, text=True, check=True)
                 return True, result.stdout.strip()
-            result = subprocess.run(cmd, check=True)
+            subprocess.run(cmd, check=True)
             return True, ""
         except subprocess.CalledProcessError as e:
             error_msg = e.stderr if hasattr(e, "stderr") and e.stderr else str(e)
@@ -93,12 +93,13 @@ class AutoPR:
             # outputからPR URLを取得し、番号を抽出
             pr_url = output.strip()
             pr_number = int(pr_url.split("/")[-1])
-            print(f"✅ PR#{pr_number} を作成しました")
-            print(f"🔗 URL: {pr_url}")
-            return pr_number
         except (ValueError, IndexError):
             print(f"❌ PR番号の取得に失敗しました: {output}")
             return None
+        else:
+            print(f"✅ PR#{pr_number} を作成しました")
+            print(f"🔗 URL: {pr_url}")
+            return pr_number
 
     def start_monitoring(self, pr_number: int) -> None:
         """PRの監視を開始(別スレッドで実行)"""
@@ -126,7 +127,8 @@ class AutoPR:
         try:
             # uvを使ってmonitor_pr.pyを実行
             subprocess.run(
-                ["uv", "run", "python", "monitor_pr.py", str(pr_number)], check=True
+                ["uv", "run", "python", "scripts/monitor_pr.py", str(pr_number)],
+                check=True,
             )
         except subprocess.CalledProcessError:
             print("❌ 監視スクリプトの実行でエラーが発生しました")
@@ -246,7 +248,7 @@ def main() -> None:
     # 自動PRツールを実行
     auto_pr = AutoPR()
 
-    def signal_handler(signum: int, frame: object) -> None:
+    def signal_handler(_signum: int, _frame: object) -> None:
         print("\n\n👋 処理を中断しました")
         auto_pr.monitoring = False
         sys.exit(0)
@@ -260,7 +262,9 @@ def main() -> None:
         else:
             print("\n❌ 処理が失敗しました")
             sys.exit(1)
-    except Exception as e:
+    except (KeyboardInterrupt, SystemExit):
+        raise
+    except (subprocess.CalledProcessError, FileNotFoundError, PermissionError) as e:
         print(f"\n❌ 予期しないエラーが発生しました: {e}")
         sys.exit(1)
 

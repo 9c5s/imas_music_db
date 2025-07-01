@@ -25,7 +25,7 @@ class WorkflowErrorFixer:
         self.project_root = Path.cwd()
 
     def run_command(
-        self, cmd: list[str], capture_output: bool = True
+        self, cmd: list[str], *, capture_output: bool = True
     ) -> tuple[bool, str]:
         """コマンドを実行して結果を返す
 
@@ -40,7 +40,7 @@ class WorkflowErrorFixer:
             if capture_output:
                 result = subprocess.run(cmd, capture_output=True, text=True, check=True)
                 return True, result.stdout.strip()
-            result = subprocess.run(cmd, check=True)
+            subprocess.run(cmd, check=True)
             return True, ""
         except subprocess.CalledProcessError as e:
             error_msg = e.stderr if hasattr(e, "stderr") and e.stderr else str(e)
@@ -299,8 +299,8 @@ Co-Authored-By: Workflow Error Fixer <noreply@github.com>"""
                             return True
                         print(f"❌ ワークフローが失敗しました: {conclusion}")
                         return False
-                except json.JSONDecodeError:
-                    pass
+                except json.JSONDecodeError as e:
+                    print(f"JSON解析エラー: {e}", file=sys.stderr)
 
             print(f"⏳ 実行中... ({elapsed}秒経過)")
             time.sleep(check_interval)
@@ -334,8 +334,8 @@ Co-Authored-By: Workflow Error Fixer <noreply@github.com>"""
                 if prs:
                     self.pr_number = prs[0]["number"]
                     print(f"📋 PR #{self.pr_number} を対象にします")
-            except json.JSONDecodeError:
-                pass
+            except json.JSONDecodeError as e:
+                print(f"JSON解析エラー: {e}", file=sys.stderr)
 
         # エラーを解析
         errors = self.parse_error_from_comments()
@@ -386,7 +386,14 @@ def main() -> None:
     except KeyboardInterrupt:
         print("\n\n👋 処理を中断しました")
         sys.exit(1)
-    except Exception as e:
+    except SystemExit:
+        raise
+    except (
+        subprocess.CalledProcessError,
+        json.JSONDecodeError,
+        KeyError,
+        FileNotFoundError,
+    ) as e:
         print(f"\n❌ 予期しないエラーが発生しました: {e}")
         sys.exit(1)
 

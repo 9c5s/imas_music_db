@@ -31,22 +31,22 @@ uv run sheet_to_json.py
 #### Pythonコード
 ```bash
 # Ruffによるリンティング
-uv run ruff check
+uv run ruff check --config config/ruff.toml
 
 # Ruffによる自動修正
-uv run ruff check --fix
+uv run ruff check --fix --config config/ruff.toml
 
 # フォーマッティング
-uv run ruff format
+uv run ruff format --config config/ruff.toml
 ```
 
 #### YAMLファイル（厳格ルール）
 ```bash
 # yamllintによるリンティング（厳格設定）
-uv run yamllint .
+uv run yamllint -c config/yamllint.yml .
 
 # yamlfixによる自動フォーマット（厳格設定）
-uv run yamlfix .
+uv run yamlfix -c config/yamlfix.toml .
 ```
 
 **厳格ルール詳細:**
@@ -64,7 +64,7 @@ uv run yamlfix .
 ./scripts.sh pr
 
 # または直接実行
-uv run python auto_pr.py
+uv run python scripts/auto_pr.py
 ```
 
 #### コード品質チェック
@@ -106,7 +106,7 @@ uv run python auto_pr.py
 ./scripts.sh clean
 
 # ワークフローエラーの自動修正
-uv run python fix_workflow_errors.py
+uv run python scripts/fix_workflow_errors.py
 ```
 
 ### 認証設定
@@ -114,6 +114,33 @@ uv run python fix_workflow_errors.py
 # Google Cloud認証（初回のみ）
 gcloud auth application-default login
 ```
+
+## プロジェクト構造
+
+```
+imas_music_db/
+├── config/                 # 設定ファイル
+│   ├── ruff.toml          # Pythonリンター/フォーマッター設定
+│   ├── yamllint.yml       # YAMLリンター設定
+│   └── yamlfix.toml       # YAML自動修正設定
+├── scripts/               # 自動化スクリプト
+│   ├── auto_pr.py         # PR作成・監視自動化
+│   ├── fix_workflow_errors.py # ワークフローエラー自動修正
+│   └── monitor_pr.py      # PR監視
+├── .github/workflows/     # GitHub Actions
+│   ├── code_quality.yml   # コード品質チェック
+│   └── update_json_data.yml # データ更新自動化
+├── sheet_to_json.py       # メインスクリプト
+├── scripts.sh             # 開発タスクランナー
+├── pyproject.toml         # プロジェクト設定
+└── README.md
+```
+
+### 設定ファイルの管理
+
+- **config/ディレクトリ**: 全ての品質チェック設定を集約
+- **統一された実行方法**: `scripts.sh`経由で設定ファイルパスを自動指定
+- **GitHub Actions連携**: CI/CDパイプラインでも同じ設定を使用
 
 ## システムアーキテクチャ
 
@@ -131,7 +158,7 @@ gcloud auth application-default login
    - スプレッドシートの生データを設定に基づいて処理・整形
    - IDの降順ソート、配列フィールドの統合処理
 
-4. **WorkflowErrorFixer** (`fix_workflow_errors.py`)
+4. **WorkflowErrorFixer** (`scripts/fix_workflow_errors.py`)
    - GitHub Actionsのコード品質チェックエラーを自動修正
    - Ruffフォーマット・リンティングエラーの自動修正
    - YAMLエラーの自動修正
