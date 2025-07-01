@@ -1,20 +1,29 @@
 ---
 # ワークフローの名前
 name: コード品質チェック
+
 # プルリクエスト時にトリガーされる
 on:
   pull_request:
-    types: [opened, synchronize, reopened]
-    # PythonまたはYAMLファイルが変更された場合のみ実行
+    types:
+      - opened
+      - synchronize
+      - reopened
+    # Python、YAML、シェルスクリプトファイルが変更された場合のみ実行
     paths:
       - '**.py'
       - '**.yml'
       - '**.yaml'
+      - '**.sh'
+      - '**.bash'
       - pyproject.toml
       - config/ruff.toml
       - config/yamllint.yml
       - config/yamlfix.toml
+      - config/.shellcheckrc
+      - config/.editorconfig
       - .github/workflows/code_quality.yml
+
 jobs:
   code-quality:
     runs-on: ubuntu-latest
@@ -46,8 +55,73 @@ jobs:
         run: |
           uv sync
 
-      # ステップ5: YAMLチェックの実行
-      - name: 5. YAMLチェック実行
+      # ステップ5: シェルスクリプトチェックの実行
+      - name: 5. シェルスクリプトチェック実行
+        id: shell_check
+        run: |
+          # シェルスクリプトチェックの結果を保存
+          echo "## 🐚 シェルスクリプト品質チェック結果" > shell_report.md
+          echo "" >> shell_report.md
+
+          # shellcheckチェック
+          echo "### ShellCheck結果" >> shell_report.md
+          if find . -name "*.sh" -o -name "*.bash" | \
+            xargs -r uv run shellcheck \
+            --rcfile=config/.shellcheckrc > \
+            shell_lint_output.txt 2>&1; then
+            echo "✅ ShellCheck: エラーなし" >> shell_report.md
+            SHELL_LINT_STATUS=0
+          else
+            echo "❌ ShellCheck: エラーあり" >> shell_report.md
+            echo '```' >> shell_report.md
+            cat shell_lint_output.txt >> shell_report.md
+            echo '```' >> shell_report.md
+            SHELL_LINT_STATUS=1
+          fi
+          echo "" >> shell_report.md
+
+          # shfmtフォーマットチェック
+          echo "### shfmtフォーマットチェック結果" >> shell_report.md
+          if find . -name "*.sh" -o -name "*.bash" | \
+            xargs -r uv run shfmt -i 2 -p -s -ci -sr -fn -d \
+            > shell_format_output.txt 2>&1; then
+            echo "✅ shfmt: 問題なし" >> shell_report.md
+            SHELL_FORMAT_STATUS=0
+          else
+            echo "❌ shfmt: 修正が必要" >> shell_report.md
+            echo '```diff' >> shell_report.md
+            cat shell_format_output.txt >> shell_report.md
+            echo '```' >> shell_report.md
+            SHELL_FORMAT_STATUS=1
+          fi
+          echo "" >> shell_report.md
+
+          # 修正方法
+          if [ $SHELL_LINT_STATUS -ne 0 ] || \
+            [ $SHELL_FORMAT_STATUS -ne 0 ]; then
+            echo "### 💡 シェルスクリプト修正方法" >> shell_report.md
+            echo "以下のコマンドをローカルで実行してください：" >> shell_report.md
+            echo '```bash' >> shell_report.md
+            if [ $SHELL_LINT_STATUS -ne 0 ]; then
+              echo "# ShellCheckリンティングチェック" >> shell_report.md
+              echo "uv run shellcheck --rcfile=config/.shellcheckrc \
+                ./*.sh scripts/*.sh" >> shell_report.md
+            fi
+            if [ $SHELL_FORMAT_STATUS -ne 0 ]; then
+              echo "# shfmtフォーマットの自動修正" >> shell_report.md
+              echo "uv run shfmt -i 2 -p -s -ci -sr -fn -w \
+                ./*.sh scripts/*.sh" >> shell_report.md
+            fi
+            echo '```' >> shell_report.md
+          fi
+
+          # 結果を出力に保存
+          echo "SHELL_LINT_STATUS=$SHELL_LINT_STATUS" >> $GITHUB_OUTPUT
+          echo "SHELL_FORMAT_STATUS=$SHELL_FORMAT_STATUS" >> $GITHUB_OUTPUT
+        continue-on-error: true
+
+      # ステップ6: YAMLチェックの実行
+      - name: 6. YAMLチェック実行
         id: yaml_check
         run: |
           # YAMLチェックの結果を保存
@@ -86,8 +160,8 @@ jobs:
           echo "YAML_LINT_STATUS=$YAML_LINT_STATUS" >> $GITHUB_OUTPUT
         continue-on-error: true
 
-      # ステップ6: Ruffチェックの実行と結果の保存
-      - name: 6. Ruffチェック実行
+      # ステップ7: Ruffチェックの実行と結果の保存
+      - name: 7. Ruffチェック実行
         id: ruff_check
         run: |
           # Ruffチェックの結果を保存
@@ -155,26 +229,32 @@ jobs:
           echo "FORMAT_STATUS=$FORMAT_STATUS" >> $GITHUB_OUTPUT
         continue-on-error: true
 
-      # ステップ7: レポートを統合
-      - name: 7. レポート統合
+      # ステップ8: レポートを統合
+      - name: 8. レポート統合
         run: |
-          # YAMLとRuffのレポートを統合
-          cat yaml_report.md > combined_report.md
+          # シェル、YAML、Ruffのレポートを統合
+          cat shell_report.md > combined_report.md
+          echo "" >> combined_report.md
+          cat yaml_report.md >> combined_report.md
           echo "" >> combined_report.md
           cat ruff_report.md >> combined_report.md
 
-      # ステップ8: PRにコメントを投稿
-      - name: 8. PR コメントを投稿
+      # ステップ9: PRにコメントを投稿
+      - name: 9. PR コメントを投稿
         uses: thollander/actions-comment-pull-request@v3
         with:
           file-path: combined_report.md
           comment-tag: code_quality_check
           mode: recreate
 
-      # ステップ9: GitHub形式でエラーを表示
-      - name: 9. GitHub形式でエラー表示
+      # ステップ10: GitHub形式でエラーを表示
+      - name: 10. GitHub形式でエラー表示
         run: |
           # GitHub形式で再度実行（Actions UIでの視認性向上のため）
+          echo "=== ShellCheck GitHub形式出力 ==="
+          find . -name "*.sh" -o -name "*.bash" | \
+            xargs -r uv run shellcheck --rcfile=config/.shellcheckrc \
+            --format=gcc . 2>&1 || true
           echo "=== yamllint GitHub形式出力 ==="
           uv run yamllint -c config/yamllint.yml \
             --format github . 2>&1 || true
@@ -182,9 +262,11 @@ jobs:
           uv run ruff check --config config/ruff.toml \
             --output-format=github . 2>&1 || true
 
-      # ステップ10: 失敗判定
-      - name: 10. チェック結果の判定
+      # ステップ11: 失敗判定
+      - name: 11. チェック結果の判定
         if: >-
+          steps.shell_check.outputs.SHELL_LINT_STATUS != '0' ||
+          steps.shell_check.outputs.SHELL_FORMAT_STATUS != '0' ||
           steps.yaml_check.outputs.YAML_LINT_STATUS != '0' ||
           steps.ruff_check.outputs.LINT_STATUS != '0' ||
           steps.ruff_check.outputs.FORMAT_STATUS != '0'
