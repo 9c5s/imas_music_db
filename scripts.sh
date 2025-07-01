@@ -76,11 +76,11 @@ case "${1:-help}" in
         ;;
     "pr")
         echo "🚀 PR作成と監視を開始..."
-        uv run python auto_pr.py
+        uv run python scripts/auto_pr.py
         ;;
     "monitor")
         echo "🔍 最新PRを監視中..."
-        uv run python monitor_pr.py
+        uv run python scripts/monitor_pr.py
         ;;
     "clean")
         echo "🧹 一時ファイルを削除中..."

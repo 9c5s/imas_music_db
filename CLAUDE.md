@@ -64,7 +64,7 @@ uv run yamlfix .
 ./scripts.sh pr
 
 # または直接実行
-uv run python auto_pr.py
+uv run python scripts/auto_pr.py
 ```
 
 #### コード品質チェック
@@ -106,7 +106,7 @@ uv run python auto_pr.py
 ./scripts.sh clean
 
 # ワークフローエラーの自動修正
-uv run python fix_workflow_errors.py
+uv run python scripts/fix_workflow_errors.py
 ```
 
 ### 認証設定
@@ -131,7 +131,7 @@ gcloud auth application-default login
    - スプレッドシートの生データを設定に基づいて処理・整形
    - IDの降順ソート、配列フィールドの統合処理
 
-4. **WorkflowErrorFixer** (`fix_workflow_errors.py`)
+4. **WorkflowErrorFixer** (`scripts/fix_workflow_errors.py`)
    - GitHub Actionsのコード品質チェックエラーを自動修正
    - Ruffフォーマット・リンティングエラーの自動修正
    - YAMLエラーの自動修正

@@ -542,8 +542,14 @@ keep-runtime-typing = true
 
 # CLIスクリプト
 "scripts/**/*.py" = [
-  "T201", # print文の使用（CLI出力）
-  "T203", # pprint文の使用（デバッグ出力）
+  "T201",    # print文の使用（CLI出力で必要）
+  "T203",    # pprint文の使用（デバッグ出力で必要）
+  "S603",    # subprocess呼び出し（既知コマンドの実行で必要）
+  "S607",    # 実行可能パス（gh, git, uvなどの実行で必要）
+  "TRY300",  # else節の提案（run_commandの構造上、現在の形が適切）
+  "C901",    # 複雑度（monitor_pr.pyの監視機能で許容）
+  "PLR0912", # 分岐数（monitor_pr.pyの監視機能で許容）
+  "PLR0915", # 文数（monitor_pr.pyの監視機能で許容）
 ]
 
 # 実験的・プロトタイプコード
