@@ -56,6 +56,26 @@ uv run yamlfix -c config/yamlfix.toml .
 - 真偽値: `true`/`false`のみ（GitHub Actions `on` は例外）
 - スペーシング・フォーマット: 厳格に統一
 
+#### シェルスクリプト（厳格ルール）
+```bash
+# ShellCheckによるリンティング（全ルール有効）
+uv run shellcheck --rcfile=config/.shellcheckrc ./*.sh scripts/*.sh
+
+# shfmtによるフォーマット（POSIX準拠）
+uv run shfmt -i 2 -p -s -ci -sr -fn -w ./*.sh scripts/*.sh
+
+# フォーマットチェック（差分表示）
+uv run shfmt -i 2 -p -s -ci -sr -fn -d ./*.sh scripts/*.sh
+```
+
+**厳格ルール詳細:**
+- **ShellCheck**: 全オプションチェック有効（`enable=all`）
+- **構文解析**: POSIX準拠による最高の互換性
+- **インデント**: 2スペース統一
+- **フォーマット**: 一貫した波括弧・演算子配置
+- **行長制限**: 80文字による横スクロール回避
+- **セキュリティ**: 変数クォート・終了コード検証
+
 ### 開発タスク（uvベース）
 
 #### ワンコマンドでPR作成・監視
@@ -86,6 +106,15 @@ uv run python scripts/auto_pr.py
 
 # YAML自動修正
 ./scripts.sh yaml-fix
+
+# シェルスクリプトリンティング
+./scripts.sh shell-lint
+
+# シェルスクリプトフォーマット
+./scripts.sh shell-format
+
+# シェルスクリプト統合チェック
+./scripts.sh shell-check
 ```
 
 #### その他の開発コマンド
@@ -122,7 +151,9 @@ imas_music_db/
 ├── config/                 # 設定ファイル
 │   ├── ruff.toml          # Pythonリンター/フォーマッター設定
 │   ├── yamllint.yml       # YAMLリンター設定
-│   └── yamlfix.toml       # YAML自動修正設定
+│   ├── yamlfix.toml       # YAML自動修正設定
+│   ├── .shellcheckrc      # ShellCheckリンター設定
+│   └── .editorconfig      # shfmtフォーマッター設定
 ├── scripts/               # 自動化スクリプト
 │   ├── auto_pr.py         # PR作成・監視自動化
 │   ├── fix_workflow_errors.py # ワークフローエラー自動修正
@@ -139,8 +170,10 @@ imas_music_db/
 ### 設定ファイルの管理
 
 - **config/ディレクトリ**: 全ての品質チェック設定を集約
+  - Python（Ruff）、YAML（yamllint/yamlfix）、シェルスクリプト（ShellCheck/shfmt）
 - **統一された実行方法**: `scripts.sh`経由で設定ファイルパスを自動指定
 - **GitHub Actions連携**: CI/CDパイプラインでも同じ設定を使用
+- **3言語統合**: Python・YAML・シェルスクリプトの統一的品質管理
 
 ## システムアーキテクチャ
 
@@ -203,11 +236,13 @@ imas_music_db/
 プルリクエスト作成時に以下のワークフローが自動実行されます：
 
 **`code_quality.yml`**: 統合コード品質チェック（PRコメント付き）
-- PythonファイルのRuffリンティング・フォーマットチェック
-- YAMLファイルのyamllintチェック
+- **Pythonファイル**: Ruffリンティング・フォーマットチェック
+- **YAMLファイル**: yamllintチェック
+- **シェルスクリプト**: ShellCheck・shfmtチェック
 - チェック結果をPRにコメントとして投稿
 - 統計情報と修正方法の表示
 - GitHub Actions UI上でのエラー表示
+- 3言語統合による包括的な品質保証
 
 ### ブランチ構成・開発フロー
 
