@@ -1,12 +1,14 @@
 ---
 # ワークフローの名前
 name: JSONデータ更新 (Workload Identity連携)
+
 on:
   schedule:
     # 日本時間午前9時に毎日実行 (UTCの午前0時)
     - cron: 0 0 * * *
   # GitHubのUIから手動で実行できるようにする
-  workflow_dispatch:
+  workflow_dispatch: null
+
 jobs:
   update-and-release:
     runs-on: ubuntu-latest
