@@ -69,138 +69,20 @@ jobs:
         run: |
           # シェルスクリプトファイルを検索
           find . -name "*.sh" -o -name "*.bash" > shell_files.txt
-          
+
           if [ -s shell_files.txt ]; then
             # ShellCheckをSARIF形式で実行
             uv run shellcheck --rcfile=config/.shellcheckrc \
-              --format=json $(cat shell_files.txt) > shellcheck-results.json || true
-            
+              --format=json $(cat shell_files.txt) \
+              > shellcheck-results.json || true
+
             # JSON結果をSARIF形式に変換
-            cat > convert_to_sarif.py << 'EOF'
-import json
-import sys
-from datetime import datetime
-
-def convert_shellcheck_to_sarif(input_file, output_file):
-    """ShellCheckのJSON出力をSARIF 2.1.0形式に変換"""
-    try:
-        with open(input_file, 'r') as f:
-            shellcheck_results = json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
-        shellcheck_results = []
-    
-    sarif_report = {
-        "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
-        "version": "2.1.0",
-        "runs": [
-            {
-                "tool": {
-                    "driver": {
-                        "name": "ShellCheck",
-                        "version": "0.10.0",
-                        "informationUri": "https://github.com/koalaman/shellcheck",
-                        "semanticVersion": "0.10.0",
-                        "rules": []
-                    }
-                },
-                "results": [],
-                "columnKind": "utf16CodeUnits"
-            }
-        ]
-    }
-    
-    # ルールとアラートを処理
-    rules_map = {}
-    results = []
-    
-    for finding in shellcheck_results:
-        rule_id = f"SC{finding.get('code', '0000')}"
-        
-        # ルール情報を追加
-        if rule_id not in rules_map:
-            rules_map[rule_id] = {
-                "id": rule_id,
-                "shortDescription": {
-                    "text": finding.get('message', 'ShellCheck finding')
-                },
-                "fullDescription": {
-                    "text": finding.get('message', 'ShellCheck finding')
-                },
-                "helpUri": f"https://www.shellcheck.net/wiki/{rule_id}",
-                "properties": {
-                    "category": "security"
-                }
-            }
-        
-        # レベルをSARIFレベルに変換
-        level_map = {
-            "error": "error",
-            "warning": "warning", 
-            "info": "note",
-            "style": "note"
-        }
-        level = level_map.get(finding.get('level', 'warning'), 'warning')
-        
-        # 結果を追加
-        result = {
-            "ruleId": rule_id,
-            "level": level,
-            "message": {
-                "text": finding.get('message', 'ShellCheck finding')
-            },
-            "locations": [
-                {
-                    "physicalLocation": {
-                        "artifactLocation": {
-                            "uri": finding.get('file', 'unknown')
-                        },
-                        "region": {
-                            "startLine": finding.get('line', 1),
-                            "startColumn": finding.get('column', 1),
-                            "endLine": finding.get('endLine', finding.get('line', 1)),
-                            "endColumn": finding.get('endColumn', finding.get('column', 1))
-                        }
-                    }
-                }
-            ]
-        }
-        results.append(result)
-    
-    # ルールをツールドライバーに追加
-    sarif_report["runs"][0]["tool"]["driver"]["rules"] = list(rules_map.values())
-    sarif_report["runs"][0]["results"] = results
-    
-    # SARIF結果を出力
-    with open(output_file, 'w') as f:
-        json.dump(sarif_report, f, indent=2)
-    
-    print(f"Converted {len(results)} findings to SARIF format")
-
-if __name__ == "__main__":
-    convert_shellcheck_to_sarif("shellcheck-results.json", "shellcheck.sarif")
-EOF
-            
-            python convert_to_sarif.py
+            python scripts/convert_shellcheck_to_sarif.py \
+              shellcheck-results.json shellcheck.sarif
           else
             echo "シェルスクリプトファイルが見つかりませんでした"
             # 空のSARIFファイルを作成
-            cat > shellcheck.sarif << 'EOF'
-{
-  "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
-  "version": "2.1.0",
-  "runs": [
-    {
-      "tool": {
-        "driver": {
-          "name": "ShellCheck",
-          "version": "0.10.0"
-        }
-      },
-      "results": []
-    }
-  ]
-}
-EOF
+            cp scripts/empty_sarif.json shellcheck.sarif
           fi
 
       - name: SARIF結果をアップロード
@@ -208,3 +90,4 @@ EOF
         with:
           sarif_file: shellcheck.sarif
           category: shell-security
+
