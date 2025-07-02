@@ -20,14 +20,15 @@ from typing import TYPE_CHECKING, Any, NotRequired, Self, TypedDict
 import google.auth
 import yaml
 from google.auth.exceptions import DefaultCredentialsError
-from googleapiclient.discovery import build
+from googleapiclient.discovery import build # type: ignore
 from googleapiclient.errors import HttpError
 
 
 if TYPE_CHECKING:
     from types import TracebackType
 
-    from googleapiclient.discovery import Resource
+    from googleapiclient._apis.drive.v3.resources import DriveResource  # type: ignore
+    from googleapiclient._apis.sheets.v4.resources import SheetsResource # type: ignore
 
 
 # --- 型定義 ---
@@ -149,8 +150,8 @@ class GoogleApiService:
 
     def __init__(self) -> None:
         """GoogleApiServiceを初期化する"""
-        self.drive: Resource | None = None
-        self.sheets: Resource | None = None
+        self.drive: DriveResource | None = None
+        self.sheets: SheetsResource | None = None
 
     def initialize(self) -> bool:
         """APIサービスを初期化する"""
@@ -288,7 +289,7 @@ class SheetProcessor:
 class SheetCopier:
     """スプレッドシートのコピーと削除を管理するコンテキストマネージャ"""
 
-    def __init__(self, drive_service: Resource, source_id: str) -> None:
+    def __init__(self, drive_service: DriveResource, source_id: str) -> None:
         """SheetCopierを初期化する"""
         self._drive_service = drive_service
         self._source_id = source_id
@@ -316,7 +317,6 @@ class SheetCopier:
                 )
                 return self
 
-            # HttpErrorを直接生成するのではなく、より適切な例外を使用
             error_message = "コピー後のファイルIDが取得できませんでした。"
             raise ValueError(error_message)
         except HttpError as e:
@@ -333,13 +333,13 @@ class SheetCopier:
         if self.copied_file_id:
             print(f"\n[情報] 一時ファイル (ID: {self.copied_file_id}) を削除します...")
             try:
-                self._drive_service.files().delete(fileId=self.copied_file_id).execute()  # type: ignore[attr-defined]
+                self._drive_service.files().delete(fileId=self.copied_file_id).execute()  
                 print("[成功] 一時ファイルを削除しました。")
             except HttpError as e:
                 print(f"[エラー] 一時ファイルの削除に失敗しました: {e}")
 
 
-def load_and_validate_config() -> dict | None:
+def load_and_validate_config() -> Config | None:
     """設定ファイルの読み込みと検証を行う"""
     try:
         config = load_config()
@@ -364,7 +364,7 @@ def initialize_api_services() -> GoogleApiService | None:
 
 
 def fetch_sheet_data(
-    api_services: GoogleApiService, config: dict, copier: SheetCopier
+    api_services: GoogleApiService, config: Config, copier: SheetCopier
 ) -> list | None:
     """スプレッドシートからデータを取得する"""
     if not copier.copied_file_id:
@@ -398,7 +398,7 @@ def fetch_sheet_data(
     return sheet_data
 
 
-def process_and_save_data(config: dict, sheet_data: list) -> None:
+def process_and_save_data(config: Config, sheet_data: list) -> None:
     """データの処理とJSONファイルへの保存を行う"""
     processor = SheetProcessor(config)
     processed_data = processor.process(sheet_data)
