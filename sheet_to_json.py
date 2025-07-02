@@ -15,19 +15,24 @@ import json
 import re
 import uuid
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, NotRequired, Self, TypedDict
+from typing import TYPE_CHECKING, Any, NotRequired, Self, TypedDict, cast
 
 import google.auth
 import yaml
 from google.auth.exceptions import DefaultCredentialsError
-from googleapiclient.discovery import build
+from googleapiclient.discovery import build  # type: ignore[import]
 from googleapiclient.errors import HttpError
 
 
 if TYPE_CHECKING:
     from types import TracebackType
 
-    from googleapiclient.discovery import Resource
+    from googleapiclient._apis.drive.v3.resources import (  # type: ignore[import]
+        DriveResource,
+    )
+    from googleapiclient._apis.sheets.v4.resources import (  # type: ignore[import]
+        SheetsResource,
+    )
 
 
 # --- 型定義 ---
@@ -100,14 +105,14 @@ def load_config(config_path: str = "config/sheet_config.yml") -> Config:
                 ),
             },
             "column_mapping": {
-                col: {
-                    "key": mapping["key"],
+                col: ColumnMapping(
+                    key=mapping["key"],
                     **(
-                        {"is_array": mapping["is_array"]}
-                        if "is_array" in mapping
-                        else {}
+                        {}
+                        if "is_array" not in mapping
+                        else {"is_array": mapping["is_array"]}
                     ),
-                }
+                )
                 for col, mapping in yaml_data["column_mapping"].items()
             },
             # YAMLのリストをsetに変換
@@ -149,16 +154,22 @@ class GoogleApiService:
 
     def __init__(self) -> None:
         """GoogleApiServiceを初期化する"""
-        self.drive: Resource | None = None
-        self.sheets: Resource | None = None
+        self.drive: DriveResource | None = None
+        self.sheets: SheetsResource | None = None
 
     def initialize(self) -> bool:
         """APIサービスを初期化する"""
         print("[情報] Google APIサービスの初期化を開始します...")
         try:
-            creds, _ = google.auth.default(scopes=SCOPES)
-            self.drive = build("drive", "v3", credentials=creds)
-            self.sheets = build("sheets", "v4", credentials=creds)
+            creds, _ = google.auth.default(scopes=SCOPES)  # type: ignore[misc]
+            self.drive = cast(
+                "DriveResource",
+                build("drive", "v3", credentials=creds),  # type: ignore[arg-type]
+            )
+            self.sheets = cast(
+                "SheetsResource",
+                build("sheets", "v4", credentials=creds),  # type: ignore[arg-type]
+            )
         except DefaultCredentialsError:
             print("[エラー] APIの認証情報の取得に失敗しました。")
             print(
@@ -250,7 +261,7 @@ class SheetProcessor:
         # 配列キーの重複を削除
         for key in self._array_keys:
             if record.get(key):
-                seen = set()
+                seen: set[str] = set()
                 record[key] = [x for x in record[key] if not (x in seen or seen.add(x))]
 
         return record
@@ -258,7 +269,7 @@ class SheetProcessor:
     @staticmethod
     def _parse_singers(value: str) -> list[str]:
         """「歌唱」列の特殊な形式を解析し、名前のリストを返す"""
-        new_values = []
+        new_values: list[str] = []
         parts = SINGER_SPLIT_PATTERN.split(value)
         for part_item in parts:
             stripped_part = part_item.strip()
@@ -288,7 +299,7 @@ class SheetProcessor:
 class SheetCopier:
     """スプレッドシートのコピーと削除を管理するコンテキストマネージャ"""
 
-    def __init__(self, drive_service: Resource, source_id: str) -> None:
+    def __init__(self, drive_service: DriveResource, source_id: str) -> None:
         """SheetCopierを初期化する"""
         self._drive_service = drive_service
         self._source_id = source_id
@@ -305,7 +316,7 @@ class SheetCopier:
         try:
             response = (
                 self._drive_service.files()  # type: ignore[attr-defined]
-                .copy(fileId=self._source_id, body=body, fields="id")
+                .copy(fileId=self._source_id, body=body, fields="id")  # type: ignore[arg-type]
                 .execute()
             )
             self.copied_file_id = response.get("id")
@@ -316,7 +327,6 @@ class SheetCopier:
                 )
                 return self
 
-            # HttpErrorを直接生成するのではなく、より適切な例外を使用
             error_message = "コピー後のファイルIDが取得できませんでした。"
             raise ValueError(error_message)
         except HttpError as e:
@@ -325,21 +335,21 @@ class SheetCopier:
 
     def __exit__(
         self,
-        exc_type: type[BaseException] | None,
-        exc_val: BaseException | None,
-        exc_tb: TracebackType | None,
+        _exc_type: type[BaseException] | None,
+        _exc_val: BaseException | None,
+        _exc_tb: TracebackType | None,
     ) -> None:
         """コンテキストを抜け、一時ファイルを削除する"""
         if self.copied_file_id:
             print(f"\n[情報] 一時ファイル (ID: {self.copied_file_id}) を削除します...")
             try:
-                self._drive_service.files().delete(fileId=self.copied_file_id).execute()  # type: ignore[attr-defined]
+                self._drive_service.files().delete(fileId=self.copied_file_id).execute()
                 print("[成功] 一時ファイルを削除しました。")
             except HttpError as e:
                 print(f"[エラー] 一時ファイルの削除に失敗しました: {e}")
 
 
-def load_and_validate_config() -> dict | None:
+def load_and_validate_config() -> Config | None:
     """設定ファイルの読み込みと検証を行う"""
     try:
         config = load_config()
@@ -364,8 +374,8 @@ def initialize_api_services() -> GoogleApiService | None:
 
 
 def fetch_sheet_data(
-    api_services: GoogleApiService, config: dict, copier: SheetCopier
-) -> list | None:
+    api_services: GoogleApiService, config: Config, copier: SheetCopier
+) -> list[list[str]] | None:
     """スプレッドシートからデータを取得する"""
     if not copier.copied_file_id:
         return None
@@ -398,7 +408,7 @@ def fetch_sheet_data(
     return sheet_data
 
 
-def process_and_save_data(config: dict, sheet_data: list) -> None:
+def process_and_save_data(config: Config, sheet_data: list[list[str]]) -> None:
     """データの処理とJSONファイルへの保存を行う"""
     processor = SheetProcessor(config)
     processed_data = processor.process(sheet_data)
@@ -425,6 +435,10 @@ def main() -> None:
     api_services = initialize_api_services()
     if not api_services:
         return
+
+    # 型チェッカー向け: api_servicesがNoneでない場合、driveとsheetsもNoneではない
+    assert api_services.drive is not None  # noqa: S101
+    assert api_services.sheets is not None  # noqa: S101
 
     try:
         with SheetCopier(api_services.drive, config["source_spreadsheet_id"]) as copier:
