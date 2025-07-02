@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
-"""
-ShellCheckのJSON出力をSARIF 2.1.0形式に変換するスクリプト
+"""ShellCheckのJSON出力をSARIF 2.1.0形式に変換するスクリプト
 
 使用方法:
     python convert_shellcheck_to_sarif.py input.json output.sarif
 """
 
+from __future__ import annotations
+
 import json
 import sys
-from datetime import datetime
+from pathlib import Path
 
 
-def convert_shellcheck_to_sarif(input_file, output_file):
+def convert_shellcheck_to_sarif(input_file: str, output_file: str) -> None:
     """ShellCheckのJSON出力をSARIF 2.1.0形式に変換"""
     try:
-        with open(input_file, 'r') as f:
-            shellcheck_results = json.load(f)
+        shellcheck_results = json.loads(Path(input_file).read_text())
     except (FileNotFoundError, json.JSONDecodeError):
         shellcheck_results = []
 
@@ -51,10 +51,10 @@ def convert_shellcheck_to_sarif(input_file, output_file):
             rules_map[rule_id] = {
                 "id": rule_id,
                 "shortDescription": {
-                    "text": finding.get('message', 'ShellCheck finding')
+                    "text": finding.get("message", "ShellCheck finding")
                 },
                 "fullDescription": {
-                    "text": finding.get('message', 'ShellCheck finding')
+                    "text": finding.get("message", "ShellCheck finding")
                 },
                 "helpUri": f"https://www.shellcheck.net/wiki/{rule_id}",
                 "properties": {
@@ -69,26 +69,30 @@ def convert_shellcheck_to_sarif(input_file, output_file):
             "info": "note",
             "style": "note"
         }
-        level = level_map.get(finding.get('level', 'warning'), 'warning')
+        level = level_map.get(finding.get("level", "warning"), "warning")
 
         # 結果を追加
         result = {
             "ruleId": rule_id,
             "level": level,
             "message": {
-                "text": finding.get('message', 'ShellCheck finding')
+                "text": finding.get("message", "ShellCheck finding")
             },
             "locations": [
                 {
                     "physicalLocation": {
                         "artifactLocation": {
-                            "uri": finding.get('file', 'unknown')
+                            "uri": finding.get("file", "unknown")
                         },
                         "region": {
-                            "startLine": finding.get('line', 1),
-                            "startColumn": finding.get('column', 1),
-                            "endLine": finding.get('endLine', finding.get('line', 1)),
-                            "endColumn": finding.get('endColumn', finding.get('column', 1))
+                            "startLine": finding.get("line", 1),
+                            "startColumn": finding.get("column", 1),
+                            "endLine": finding.get(
+                                "endLine", finding.get("line", 1)
+                            ),
+                            "endColumn": finding.get(
+                                "endColumn", finding.get("column", 1)
+                            )
                         }
                     }
                 }
@@ -101,8 +105,7 @@ def convert_shellcheck_to_sarif(input_file, output_file):
     sarif_report["runs"][0]["results"] = results
 
     # SARIF結果を出力
-    with open(output_file, 'w') as f:
-        json.dump(sarif_report, f, indent=2)
+    Path(output_file).write_text(json.dumps(sarif_report, indent=2))
 
     print(f"Converted {len(results)} findings to SARIF format")
 
@@ -111,7 +114,7 @@ if __name__ == "__main__":
     if len(sys.argv) != 3:
         print("Usage: python convert_shellcheck_to_sarif.py input.json output.sarif")
         sys.exit(1)
-    
+
     input_file = sys.argv[1]
     output_file = sys.argv[2]
     convert_shellcheck_to_sarif(input_file, output_file)
