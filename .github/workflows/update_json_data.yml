@@ -36,24 +36,24 @@ jobs:
             ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
 
-      # ステップ3: Pythonの実行環境をセットアップする
-      - name: 3. Python環境のセットアップ
-        uses: actions/setup-python@v5
+      # ステップ3: uvをセットアップする（高速なPythonパッケージマネージャー）
+      - name: 3. uvのセットアップ
+        uses: astral-sh/setup-uv@v4
         with:
-          python-version: '3.13'
+          enable-cache: true
+          cache-dependency-glob: pyproject.toml
 
-      # ステップ4: Pythonスクリプトの実行に必要なライブラリをインストールする
+      # ステップ4: 依存ライブラリのインストール（本番依存関係のみ）
       - name: 4. 依存ライブラリのインストール
         run: |
-          python -m pip install --upgrade pip
-          pip install google-api-python-client google-auth-httplib2 google-auth
+          uv sync --no-dev
 
         # ステップ5: Pythonスクリプトを実行してJSONファイルを生成する
       - name: 5. Pythonスクリプトを実行してJSONを生成
         id: generate_json
         working-directory: ./main_repo
         run: |
-          python sheet_to_json.py
+          uv run sheet_to_json.py
           if [ -f imas_music_db.json ]; then
             echo "JSON_EXISTS=true" >> $GITHUB_OUTPUT
             echo "json_file_path=$(pwd)/imas_music_db.json" >> $GITHUB_OUTPUT

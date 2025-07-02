@@ -37,26 +37,20 @@ jobs:
       - name: 1. リポジトリをチェックアウト
         uses: actions/checkout@v4
 
-      # ステップ2: Pythonのセットアップ
-      - name: 2. Python環境のセットアップ
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.13'
-
-      # ステップ3: uvをインストール（高速なPythonパッケージマネージャー）
-      - name: 3. uvのインストール
+      # ステップ2: uvをインストール（高速なPythonパッケージマネージャー）
+      - name: 2. uvのインストール
         uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
           cache-dependency-glob: pyproject.toml
 
-      # ステップ4: 依存関係のインストール（開発依存関係を含む）
-      - name: 4. 依存関係のインストール
+      # ステップ3: 依存関係のインストール（開発依存関係を含む）
+      - name: 3. 依存関係のインストール
         run: |
           uv sync
 
-      # ステップ5: シェルスクリプトチェックの実行
-      - name: 5. シェルスクリプトチェック実行
+      # ステップ4: シェルスクリプトチェックの実行
+      - name: 4. シェルスクリプトチェック実行
         id: shell_check
         run: |
           # シェルスクリプトチェックの結果を保存
@@ -120,8 +114,8 @@ jobs:
           echo "SHELL_FORMAT_STATUS=$SHELL_FORMAT_STATUS" >> $GITHUB_OUTPUT
         continue-on-error: true
 
-      # ステップ6: YAMLチェックの実行
-      - name: 6. YAMLチェック実行
+      # ステップ5: YAMLチェックの実行
+      - name: 5. YAMLチェック実行
         id: yaml_check
         run: |
           # YAMLチェックの結果を保存
@@ -160,8 +154,8 @@ jobs:
           echo "YAML_LINT_STATUS=$YAML_LINT_STATUS" >> $GITHUB_OUTPUT
         continue-on-error: true
 
-      # ステップ7: Ruffチェックの実行と結果の保存
-      - name: 7. Ruffチェック実行
+      # ステップ6: Ruffチェックの実行と結果の保存
+      - name: 6. Ruffチェック実行
         id: ruff_check
         run: |
           # Ruffチェックの結果を保存
@@ -229,8 +223,8 @@ jobs:
           echo "FORMAT_STATUS=$FORMAT_STATUS" >> $GITHUB_OUTPUT
         continue-on-error: true
 
-      # ステップ8: レポートを統合
-      - name: 8. レポート統合
+      # ステップ7: レポートを統合
+      - name: 7. レポート統合
         run: |
           # シェル、YAML、Ruffのレポートを統合
           cat shell_report.md > combined_report.md
@@ -239,16 +233,16 @@ jobs:
           echo "" >> combined_report.md
           cat ruff_report.md >> combined_report.md
 
-      # ステップ9: PRにコメントを投稿
-      - name: 9. PR コメントを投稿
+      # ステップ8: PRにコメントを投稿
+      - name: 8. PR コメントを投稿
         uses: thollander/actions-comment-pull-request@v3
         with:
           file-path: combined_report.md
           comment-tag: code_quality_check
           mode: recreate
 
-      # ステップ10: GitHub形式でエラーを表示
-      - name: 10. GitHub形式でエラー表示
+      # ステップ9: GitHub形式でエラーを表示
+      - name: 9. GitHub形式でエラー表示
         run: |
           # GitHub形式で再度実行（Actions UIでの視認性向上のため）
           echo "=== ShellCheck GitHub形式出力 ==="
@@ -262,8 +256,8 @@ jobs:
           uv run ruff check --config config/ruff.toml \
             --output-format=github . 2>&1 || true
 
-      # ステップ11: 失敗判定
-      - name: 11. チェック結果の判定
+      # ステップ10: 失敗判定
+      - name: 10. チェック結果の判定
         if: >-
           steps.shell_check.outputs.SHELL_LINT_STATUS != '0' ||
           steps.shell_check.outputs.SHELL_FORMAT_STATUS != '0' ||
