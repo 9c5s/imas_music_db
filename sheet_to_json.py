@@ -100,14 +100,14 @@ def load_config(config_path: str = "config/sheet_config.yml") -> Config:
                 ),
             },
             "column_mapping": {
-                col: {
-                    "key": mapping["key"],
+                col: ColumnMapping(
+                    key=mapping["key"],
                     **(
-                        {"is_array": mapping["is_array"]}
-                        if "is_array" in mapping
-                        else {}
+                        {}
+                        if "is_array" not in mapping
+                        else {"is_array": mapping["is_array"]}
                     ),
-                }
+                )
                 for col, mapping in yaml_data["column_mapping"].items()
             },
             # YAMLのリストをsetに変換

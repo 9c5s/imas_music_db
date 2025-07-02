@@ -19,4 +19,5 @@ dev = [
     "yamlfix>=1.16.0",
     "shellcheck-py>=0.10.0",
     "shfmt-py>=3.8.0",
+    "google-api-python-client-stubs>=1.29.0",
 ]
