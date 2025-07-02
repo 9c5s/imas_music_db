@@ -28,7 +28,9 @@ class AutoPR:
         self.monitoring: bool = False
         self.monitor_thread: threading.Thread | None = None
 
-    def run_command(self, cmd: list[str], *, capture_output: bool = True) -> tuple[bool, str]:
+    def run_command(
+        self, cmd: list[str], *, capture_output: bool = True
+    ) -> tuple[bool, str]:
         """コマンドを実行して結果を返す"""
         try:
             if capture_output:

@@ -102,7 +102,11 @@ class WorkflowErrorFixer:
             エラータイプごとのエラーメッセージ辞書
         """
         comments: list[dict[str, Any]] = self.get_pr_comments()
-        errors: dict[str, list[str]] = {"ruff_lint": [], "ruff_format": [], "yaml_lint": []}
+        errors: dict[str, list[str]] = {
+            "ruff_lint": [],
+            "ruff_format": [],
+            "yaml_lint": [],
+        }
 
         for comment in comments:
             comment_user: dict[str, Any] | None = comment.get("user")
@@ -116,7 +120,9 @@ class WorkflowErrorFixer:
             # Ruffリンティングエラー
             if "❌ リンティング: エラーあり" in body:
                 # エラー内容を抽出
-                lint_match: re.Match[str] | None = re.search(r"```\n(.*?)```", body, re.DOTALL)
+                lint_match: re.Match[str] | None = re.search(
+                    r"```\n(.*?)```", body, re.DOTALL
+                )
                 if lint_match:
                     errors["ruff_lint"].append(lint_match.group(1))
 
@@ -126,7 +132,9 @@ class WorkflowErrorFixer:
 
             # YAMLエラー
             if "❌ yamllint: エラーあり" in body:
-                yaml_match: re.Match[str] | None = re.search(r"```\n(.*?)```", body, re.DOTALL)
+                yaml_match: re.Match[str] | None = re.search(
+                    r"```\n(.*?)```", body, re.DOTALL
+                )
                 if yaml_match:
                     errors["yaml_lint"].append(yaml_match.group(1))
 
