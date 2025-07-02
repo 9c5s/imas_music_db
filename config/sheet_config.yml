@@ -42,61 +42,51 @@ column_mapping:
   B:
     key: "ID"
     is_array: false
-    description: "楽曲の一意識別番号（数値）"
 
   # C列: 楽曲名
   C:
     key: "曲名"
     is_array: false
-    description: "楽曲の正式名称"
 
   # D列: 読み方
   D:
     key: "よみがな"
     is_array: false
-    description: "楽曲名の読み方（ひらがな・カタカナ）"
 
   # E列: CD題名
   E:
     key: "CD題"
     is_array: false
-    description: "収録されているCDのタイトル"
 
   # F列: 作詞者（複数の場合はカンマ区切り）
   F:
     key: "作詞"
     is_array: true
-    description: "楽曲の作詞者（複数の場合は配列として処理）"
 
   # G列: 作曲者（複数の場合はカンマ区切り）
   G:
     key: "作曲"
     is_array: true
-    description: "楽曲の作曲者（複数の場合は配列として処理）"
 
   # H列: 編曲者（複数の場合はカンマ区切り）
   H:
     key: "編曲"
     is_array: true
-    description: "楽曲の編曲者（複数の場合は配列として処理）"
 
   # I列: ブランド・シリーズ（複数の場合はカンマ区切り）
   I:
     key: "ブランド"
     is_array: true
-    description: "楽曲が属するブランドやシリーズ（アイマス、デレマス等）"
 
   # J列: 楽曲の時間
   J:
     key: "時間"
     is_array: false
-    description: "楽曲の再生時間（分:秒形式）"
 
   # K列: 歌唱者情報（特殊処理対象）
   K:
     key: "歌唱"
     is_array: true
-    description: "楽曲の歌唱者・ユニット（特殊形式で解析される）"
 
   # L列: 歌唱者情報（K列と統合）
   # 注意: K列とL列は共に"歌唱"キーにマッピングされ、
@@ -104,25 +94,21 @@ column_mapping:
   L:
     key: "歌唱"
     is_array: true
-    description: "楽曲の歌唱者・ユニット（K列と統合処理される）"
 
   # M列: CD品番
   M:
     key: "CD品番"
     is_array: false
-    description: "CDの商品識別番号（JANコード等）"
 
   # N列: CD名
   N:
     key: "CD名"
     is_array: false
-    description: "CDの正式な商品名"
 
   # O列: 発売日
   O:
     key: "発売日"
     is_array: false
-    description: "CDの発売日（YYYY/MM/DD形式）"
 
 # === 特殊処理設定 ===
 # 空文字として扱う値のリスト
