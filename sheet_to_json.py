@@ -15,7 +15,7 @@ import json
 import re
 import uuid
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, NotRequired, Self, TypedDict
+from typing import TYPE_CHECKING, Any, NotRequired, Self, TypedDict, cast
 
 import google.auth
 import yaml
@@ -161,10 +161,13 @@ class GoogleApiService:
         """APIサービスを初期化する"""
         print("[情報] Google APIサービスの初期化を開始します...")
         try:
-            auth_result = google.auth.default(scopes=SCOPES)
-            creds = auth_result[0]  # type: ignore[misc]
-            self.drive = build("drive", "v3", credentials=creds)
-            self.sheets = build("sheets", "v4", credentials=creds)
+            creds, _ = google.auth.default(scopes=SCOPES)  # type: ignore[misc]
+            self.drive = cast(
+                "DriveResource", build("drive", "v3", credentials=creds)  # type: ignore[arg-type]
+            )
+            self.sheets = cast(
+                "SheetsResource", build("sheets", "v4", credentials=creds)  # type: ignore[arg-type]
+            )
         except DefaultCredentialsError:
             print("[エラー] APIの認証情報の取得に失敗しました。")
             print(
