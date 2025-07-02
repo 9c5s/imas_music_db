@@ -13,6 +13,7 @@ import json
 import subprocess
 import sys
 import time
+from typing import Any
 
 
 def run_gh_command(cmd: list[str]) -> str:
@@ -33,7 +34,7 @@ def get_latest_pr_number() -> int | None:
         return None
 
     try:
-        prs = json.loads(output)
+        prs: list[dict[str, Any]] = json.loads(output)
         if prs and len(prs) > 0:
             return prs[0]["number"]
     except json.JSONDecodeError:
@@ -41,7 +42,7 @@ def get_latest_pr_number() -> int | None:
     return None
 
 
-def get_pr_status(pr_number: int) -> dict:
+def get_pr_status(pr_number: int) -> dict[str, Any]:
     """PRの詳細情報を取得する"""
     output = run_gh_command([
         "gh",
@@ -55,27 +56,29 @@ def get_pr_status(pr_number: int) -> dict:
         return {}
 
     try:
-        return json.loads(output)
+        pr_data: dict[str, Any] = json.loads(output)
+        return pr_data
     except json.JSONDecodeError:
         print(f"PR#{pr_number}の詳細取得に失敗しました", flush=True)
         return {}
 
 
-def get_pr_comments(pr_number: int) -> list[dict]:
+def get_pr_comments(pr_number: int) -> list[dict[str, Any]]:
     """PRのコメントを取得する"""
     output = run_gh_command(["gh", "pr", "view", str(pr_number), "--json", "comments"])
     if not output:
         return []
 
     try:
-        data = json.loads(output)
-        return data.get("comments", [])
+        data: dict[str, Any] = json.loads(output)
+        comments: list[dict[str, Any]] = data.get("comments", [])
+        return comments
     except json.JSONDecodeError:
         print(f"PR#{pr_number}のコメント取得に失敗しました", flush=True)
         return []
 
 
-def format_check_status(checks: list[dict]) -> str:
+def format_check_status(checks: list[dict[str, Any]]) -> str:
     """チェック状況をフォーマットして表示用の文字列を生成する"""
     if not checks:
         return "⏳ チェック待機中..."
@@ -89,21 +92,23 @@ def format_check_status(checks: list[dict]) -> str:
         "SKIPPED": "⏭️",
     }
 
-    results = []
+    results: list[str] = []
     for check in checks:
-        icon = status_icons.get(check.get("state", "UNKNOWN"), "❓")
-        name = check.get("name", "Unknown")
+        check_state: str = check.get("state", "UNKNOWN")
+        icon: str = status_icons.get(check_state, "❓")
+        name: str = check.get("name", "Unknown")
         results.append(f"{icon} {name}")
 
     return "\n".join(results)
 
 
-def find_code_quality_comment(comments: list[dict]) -> str | None:
+def find_code_quality_comment(comments: list[dict[str, Any]]) -> str | None:
     """コード品質チェックのコメントを探す"""
     for comment in comments:
-        if comment.get("author", {}).get("login") == "github-actions[bot]":
-            body = comment.get("body", "")
-            if "コード品質チェック結果" in body or "YAMLコード品質" in body:
+        author: dict[str, Any] | None = comment.get("author")
+        if author and author.get("login") == "github-actions[bot]":
+            body: str | None = comment.get("body")
+            if body and ("コード品質チェック結果" in body or "YAMLコード品質" in body):
                 return body
     return None
 

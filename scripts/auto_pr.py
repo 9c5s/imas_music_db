@@ -25,10 +25,12 @@ class AutoPR:
 
     def __init__(self) -> None:
         """初期化処理"""
-        self.monitoring = False
-        self.monitor_thread = None
+        self.monitoring: bool = False
+        self.monitor_thread: threading.Thread | None = None
 
-    def run_command(self, cmd: list, *, capture_output: bool = True) -> tuple:
+    def run_command(
+        self, cmd: list[str], *, capture_output: bool = True
+    ) -> tuple[bool, str]:
         """コマンドを実行して結果を返す"""
         try:
             if capture_output:
@@ -91,8 +93,8 @@ class AutoPR:
         # PR番号を抽出
         try:
             # outputからPR URLを取得し、番号を抽出
-            pr_url = output.strip()
-            pr_number = int(pr_url.split("/")[-1])
+            pr_url: str = output.strip()
+            pr_number: int = int(pr_url.split("/")[-1])
         except (ValueError, IndexError):
             print(f"❌ PR番号の取得に失敗しました: {output}")
             return None
@@ -135,7 +137,7 @@ class AutoPR:
         finally:
             self.monitoring = False
 
-    def generate_default_pr_info(self) -> tuple:
+    def generate_default_pr_info(self) -> tuple[str, str]:
         """デフォルトのPR情報を生成"""
         branch = self.get_current_branch()
         if not branch:
@@ -161,9 +163,9 @@ class AutoPR:
             "--format=%s",
         ])
 
-        body_parts = ["## Summary"]
+        body_parts: list[str] = ["## Summary"]
         if success and commits:
-            commit_list = commits.split("\n")
+            commit_list: list[str] = commits.split("\n")
             body_parts.extend([
                 f"- {commit}" for commit in commit_list if commit.strip()
             ])
@@ -198,6 +200,8 @@ class AutoPR:
 
         # PR情報を準備
         if not title or not body:
+            default_title: str
+            default_body: str
             default_title, default_body = self.generate_default_pr_info()
             title = title or default_title
             body = body or default_body
