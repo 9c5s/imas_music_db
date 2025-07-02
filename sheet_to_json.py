@@ -340,74 +340,100 @@ class SheetCopier:
                 print(f"[エラー] 一時ファイルの削除に失敗しました: {e}")
 
 
-def main() -> None:
-    """メイン処理"""
-    print("--- スプレッドシートのデータ取得処理を開始します ---")
-
-    # 0. 設定ファイルの読み込み
+def load_and_validate_config() -> dict | None:
+    """設定ファイルの読み込みと検証を行う"""
     try:
         config = load_config()
         print("[成功] 設定ファイルを読み込みました。")
     except (FileNotFoundError, yaml.YAMLError, KeyError, ValueError) as e:
         print(f"[エラー] 設定ファイルの読み込みに失敗しました: {e}")
-        return
+        return None
+    else:
+        return config
 
-    # 1. APIサービス初期化
+
+def initialize_api_services() -> GoogleApiService | None:
+    """Google APIサービスの初期化を行う"""
     api_services = GoogleApiService()
     if (
         not api_services.initialize()
         or not api_services.drive
         or not api_services.sheets
     ):
+        return None
+    return api_services
+
+
+def fetch_sheet_data(
+    api_services: GoogleApiService, config: dict, copier: SheetCopier
+) -> list | None:
+    """スプレッドシートからデータを取得する"""
+    if not copier.copied_file_id:
+        return None
+
+    sheet_name = config["target_sheet_name"]
+    print(f"\n[情報] シート '{sheet_name}' からデータを取得します...")
+    try:
+        result = (
+            api_services.sheets.spreadsheets()  # type: ignore[attr-defined]
+            .values()
+            .get(
+                spreadsheetId=copier.copied_file_id,
+                range=f"'{sheet_name}'",
+                valueRenderOption="FORMATTED_VALUE",
+            )
+            .execute()
+        )
+    except HttpError as e:
+        print(f"[エラー] シートデータの取得に失敗しました: {e}")
+        return None
+
+    sheet_data = result.get("values", [])
+    data_start_row = config["data_structure"]["data_start_row"]
+    if not sheet_data or len(sheet_data) < data_start_row:
+        print(
+            f"[警告] {data_start_row}行目以降のデータが見つかりませんでした。",
+        )
+        return None
+
+    return sheet_data
+
+
+def process_and_save_data(config: dict, sheet_data: list) -> None:
+    """データの処理とJSONファイルへの保存を行う"""
+    processor = SheetProcessor(config)
+    processed_data = processor.process(sheet_data)
+
+    json_output = json.dumps(
+        processed_data,
+        ensure_ascii=False,
+        separators=(",", ":"),
+    )
+
+    output_path = Path(config["output_filename"])
+    output_path.write_text(json_output, encoding="utf-8")
+    print(f"\n[成功] JSONデータを {output_path.resolve()} に保存しました。")
+
+
+def main() -> None:
+    """メイン処理"""
+    print("--- スプレッドシートのデータ取得処理を開始します ---")
+
+    config = load_and_validate_config()
+    if not config:
+        return
+
+    api_services = initialize_api_services()
+    if not api_services:
         return
 
     try:
-        # 2. スプレッドシートを一時的にコピー (コンテキストマネージャ使用)
         with SheetCopier(api_services.drive, config["source_spreadsheet_id"]) as copier:
-            if not copier.copied_file_id:
+            sheet_data = fetch_sheet_data(api_services, config, copier)
+            if not sheet_data:
                 return
 
-            # 3. シートからデータを取得
-            sheet_name = config["target_sheet_name"]
-            print(f"\n[情報] シート '{sheet_name}' からデータを取得します...")
-            try:
-                result = (
-                    api_services.sheets.spreadsheets()  # type: ignore[attr-defined]
-                    .values()
-                    .get(
-                        spreadsheetId=copier.copied_file_id,
-                        range=f"'{sheet_name}'",
-                        valueRenderOption="FORMATTED_VALUE",
-                    )
-                    .execute()
-                )
-            except HttpError as e:
-                print(f"[エラー] シートデータの取得に失敗しました: {e}")
-                return
-
-            sheet_data = result.get("values", [])
-            data_start_row = config["data_structure"]["data_start_row"]
-            if not sheet_data or len(sheet_data) < data_start_row:
-                print(
-                    f"[警告] {data_start_row}行目以降のデータが見つかりませんでした。",
-                )
-                return
-
-            # 4. データの処理と整形
-            processor = SheetProcessor(config)
-            processed_data = processor.process(sheet_data)
-
-            # 5. JSONに変換
-            json_output = json.dumps(
-                processed_data,
-                ensure_ascii=False,
-                separators=(",", ":"),
-            )
-
-            # 6. ファイルに保存
-            output_path = Path(config["output_filename"])
-            output_path.write_text(json_output, encoding="utf-8")
-            print(f"\n[成功] JSONデータを {output_path.resolve()} に保存しました。")
+            process_and_save_data(config, sheet_data)
 
     except (OSError, HttpError, ValueError) as e:
         print(f"\n[エラー] メイン処理で予期せぬエラーが発生しました: {e}")
