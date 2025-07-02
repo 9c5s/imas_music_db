@@ -13,6 +13,7 @@ import subprocess
 import sys
 import time
 from pathlib import Path
+from typing import Any
 
 
 class WorkflowErrorFixer:
@@ -46,7 +47,7 @@ class WorkflowErrorFixer:
             error_msg = e.stderr if hasattr(e, "stderr") and e.stderr else str(e)
             return False, error_msg
 
-    def get_latest_workflow_run(self) -> dict | None:
+    def get_latest_workflow_run(self) -> dict[str, Any] | None:
         """最新のワークフロー実行結果を取得
 
         Returns:
@@ -66,12 +67,12 @@ class WorkflowErrorFixer:
             return None
 
         try:
-            runs = json.loads(output)
+            runs: list[dict[str, Any]] = json.loads(output)
             return runs[0] if runs else None
         except json.JSONDecodeError:
             return None
 
-    def get_pr_comments(self) -> list[dict]:
+    def get_pr_comments(self) -> list[dict[str, Any]]:
         """PRのコメントを取得
 
         Returns:
@@ -89,7 +90,8 @@ class WorkflowErrorFixer:
             return []
 
         try:
-            return json.loads(output)
+            comments: list[dict[str, Any]] = json.loads(output)
+            return comments
         except json.JSONDecodeError:
             return []
 
@@ -99,19 +101,22 @@ class WorkflowErrorFixer:
         Returns:
             エラータイプごとのエラーメッセージ辞書
         """
-        comments = self.get_pr_comments()
-        errors = {"ruff_lint": [], "ruff_format": [], "yaml_lint": []}
+        comments: list[dict[str, Any]] = self.get_pr_comments()
+        errors: dict[str, list[str]] = {"ruff_lint": [], "ruff_format": [], "yaml_lint": []}
 
         for comment in comments:
-            if comment.get("user", {}).get("login") != "github-actions[bot]":
+            comment_user: dict[str, Any] | None = comment.get("user")
+            if not comment_user or comment_user.get("login") != "github-actions[bot]":
                 continue
 
-            body = comment.get("body", "")
+            body: str | None = comment.get("body")
+            if not body:
+                continue
 
             # Ruffリンティングエラー
             if "❌ リンティング: エラーあり" in body:
                 # エラー内容を抽出
-                lint_match = re.search(r"```\n(.*?)```", body, re.DOTALL)
+                lint_match: re.Match[str] | None = re.search(r"```\n(.*?)```", body, re.DOTALL)
                 if lint_match:
                     errors["ruff_lint"].append(lint_match.group(1))
 
@@ -121,7 +126,7 @@ class WorkflowErrorFixer:
 
             # YAMLエラー
             if "❌ yamllint: エラーあり" in body:
-                yaml_match = re.search(r"```\n(.*?)```", body, re.DOTALL)
+                yaml_match: re.Match[str] | None = re.search(r"```\n(.*?)```", body, re.DOTALL)
                 if yaml_match:
                     errors["yaml_lint"].append(yaml_match.group(1))
 
@@ -151,13 +156,13 @@ class WorkflowErrorFixer:
         print("🔧 Ruffリンティングエラーを修正中...")
 
         # 自動修正可能なエラーを修正
-        success, output = self.run_command(["uv", "run", "ruff", "check", "--fix"])
+        success, _ = self.run_command(["uv", "run", "ruff", "check", "--fix"])
         if success:
             self.errors_fixed.append("Ruffリンティング修正(自動修正可能分)")
             print("✅ 自動修正可能なエラーを修正しました")
 
         # 残りのエラーを確認
-        success, output = self.run_command(["uv", "run", "ruff", "check"])
+        success, _ = self.run_command(["uv", "run", "ruff", "check"])
         if success:
             print("✅ 全てのリンティングエラーが解決しました")
             return True
@@ -265,12 +270,12 @@ Co-Authored-By: Workflow Error Fixer <noreply@github.com>"""
         time.sleep(wait_seconds)
 
         # 新しいワークフロー実行を確認
-        latest_run = self.get_latest_workflow_run()
+        latest_run: dict[str, Any] | None = self.get_latest_workflow_run()
         if not latest_run:
             print("❌ ワークフロー実行情報を取得できませんでした")
             return False
 
-        run_id = latest_run.get("databaseId")
+        run_id: Any = latest_run.get("databaseId")
         print(f"🔍 ワークフロー実行 #{run_id} を監視中...")
 
         # ワークフローが完了するまで待機(最大5分)
