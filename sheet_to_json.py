@@ -163,10 +163,12 @@ class GoogleApiService:
         try:
             creds, _ = google.auth.default(scopes=SCOPES)  # type: ignore[misc]
             self.drive = cast(
-                "DriveResource", build("drive", "v3", credentials=creds)  # type: ignore[arg-type]
+                "DriveResource",
+                build("drive", "v3", credentials=creds),  # type: ignore[arg-type]
             )
             self.sheets = cast(
-                "SheetsResource", build("sheets", "v4", credentials=creds)  # type: ignore[arg-type]
+                "SheetsResource",
+                build("sheets", "v4", credentials=creds),  # type: ignore[arg-type]
             )
         except DefaultCredentialsError:
             print("[エラー] APIの認証情報の取得に失敗しました。")
