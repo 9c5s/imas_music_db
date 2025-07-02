@@ -30,13 +30,13 @@ def convert_shellcheck_to_sarif(input_file: str, output_file: str) -> None:
                         "version": "0.10.0",
                         "informationUri": "https://github.com/koalaman/shellcheck",
                         "semanticVersion": "0.10.0",
-                        "rules": []
+                        "rules": [],
                     }
                 },
                 "results": [],
-                "columnKind": "utf16CodeUnits"
+                "columnKind": "utf16CodeUnits",
             }
-        ]
+        ],
     }
 
     # ルールとアラートを処理
@@ -57,9 +57,7 @@ def convert_shellcheck_to_sarif(input_file: str, output_file: str) -> None:
                     "text": finding.get("message", "ShellCheck finding")
                 },
                 "helpUri": f"https://www.shellcheck.net/wiki/{rule_id}",
-                "properties": {
-                    "category": "security"
-                }
+                "properties": {"category": "security"},
             }
 
         # レベルをSARIFレベルに変換
@@ -67,7 +65,7 @@ def convert_shellcheck_to_sarif(input_file: str, output_file: str) -> None:
             "error": "error",
             "warning": "warning",
             "info": "note",
-            "style": "note"
+            "style": "note",
         }
         level = level_map.get(finding.get("level", "warning"), "warning")
 
@@ -75,28 +73,22 @@ def convert_shellcheck_to_sarif(input_file: str, output_file: str) -> None:
         result = {
             "ruleId": rule_id,
             "level": level,
-            "message": {
-                "text": finding.get("message", "ShellCheck finding")
-            },
+            "message": {"text": finding.get("message", "ShellCheck finding")},
             "locations": [
                 {
                     "physicalLocation": {
-                        "artifactLocation": {
-                            "uri": finding.get("file", "unknown")
-                        },
+                        "artifactLocation": {"uri": finding.get("file", "unknown")},
                         "region": {
                             "startLine": finding.get("line", 1),
                             "startColumn": finding.get("column", 1),
-                            "endLine": finding.get(
-                                "endLine", finding.get("line", 1)
-                            ),
+                            "endLine": finding.get("endLine", finding.get("line", 1)),
                             "endColumn": finding.get(
                                 "endColumn", finding.get("column", 1)
-                            )
-                        }
+                            ),
+                        },
                     }
                 }
-            ]
+            ],
         }
         results.append(result)
 
