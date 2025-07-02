@@ -1,0 +1,193 @@
+{
+  // Pyright設定ファイル - 最も厳格かつ安全な型チェック設定
+  // 日本語コメント・コーディング対応版
+  // 
+  // このファイルはPyrightの全ての主要設定項目に詳細なコメントを付けています。
+  // 各設定の意味と影響を理解した上で、プロジェクトに応じて調整してください。
+
+  // ===============================================================================
+  // 基本設定
+  // ===============================================================================
+
+  // Pythonバージョンの指定
+  // このプロジェクトはPython 3.13を使用
+  "pythonVersion": "3.13",
+
+  // Pythonプラットフォームの指定（Darwin: macOS, Linux, Windows）
+  "pythonPlatform": "All",
+
+  // ===============================================================================
+  // プロジェクト構造設定  
+  // ===============================================================================
+
+  // 分析対象のルートディレクトリ
+  // プロジェクトルートを指定
+  "include": [
+    ".",
+    "scripts",
+    "config"
+  ],
+
+  // 分析対象から除外するディレクトリ・ファイル
+  // Ruffと同様の除外設定を適用
+  "exclude": [
+    ".bzr",
+    ".direnv", 
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "venv",
+    ".vscode",
+    ".idea",
+    "*.egg-info"
+  ],
+
+  // スタブパッケージのディレクトリ
+  // Google API関連の型スタブを使用
+  "stubPath": "",
+
+  // 仮想環境のパス
+  // uvの仮想環境を指定
+  "venvPath": ".venv",
+
+  // ===============================================================================
+  // 型チェック厳格度設定
+  // ===============================================================================
+
+  // 型チェックモード
+  // "strict": 最も厳格なチェック
+  // "basic": 基本的なチェック（推奨）
+  // "off": チェック無効
+  "typeCheckingMode": "basic",
+
+  // ===============================================================================
+  // 詳細な型チェック設定
+  // ===============================================================================
+
+  // 不明な型の変数・引数に対する診断レベル
+  "reportGeneralTypeIssues": "error",
+
+  // 未使用インポートの診断レベル
+  "reportUnusedImport": "information",
+
+  // 未使用変数の診断レベル
+  "reportUnusedVariable": "information",
+
+  // 未使用クラスの診断レベル
+  "reportUnusedClass": "information",
+
+  // 未使用関数の診断レベル
+  "reportUnusedFunction": "information",
+
+  // 型注釈がない関数の診断レベル
+  "reportUntypedFunctionDecorator": "error",
+
+  // 型注釈がないベースクラスの診断レベル
+  "reportUntypedBaseClass": "error",
+
+  // 型注釈がない名前付きタプルの診断レベル
+  "reportUntypedNamedTuple": "error",
+
+  // プライベートインポートの診断レベル
+  "reportPrivateImportUsage": "error",
+
+  // 型チェック未対応のインポートの診断レベル
+  "reportMissingTypeStubs": "information",
+
+  // インポートサイクルの診断レベル
+  "reportImportCycles": "error",
+
+  // 到達不可能なコードの診断レベル
+  "reportUnreachable": "warning",
+
+  // Assert文が常にTrueの診断レベル
+  "reportAssertAlwaysTrue": "error",
+
+  // Self型の誤用診断レベル
+  "reportInvalidSelf": "error",
+
+  // StringIOの誤用診断レベル
+  "reportInvalidStringEscapeSequence": "error",
+
+  // 不正な型の診断レベル
+  "reportInvalidTypeVarUse": "error",
+
+  // 未定義変数の診断レベル
+  "reportUndefinedVariable": "error",
+
+  // 重複インポートの診断レベル
+  "reportDuplicateImport": "warning",
+
+  // 型を含む式での診断レベル
+  "reportInconsistentConstructor": "error",
+
+  // Optional型の誤用診断レベル
+  "reportOptionalSubscript": "error",
+  "reportOptionalMemberAccess": "error",
+  "reportOptionalCall": "error",
+  "reportOptionalIterable": "error",
+  "reportOptionalContextManager": "error",
+  "reportOptionalOperand": "error",
+
+  // 型の不一致診断レベル
+  "reportTypeMismatch": "error",
+
+  // 属性アクセスエラーの診断レベル
+  "reportAttributeAccessIssue": "error",
+
+  // 不正なstubs設定の診断レベル
+  "reportInvalidStubStatement": "error",
+
+  // 型エイリアスの誤用診断レベル
+  "reportInvalidTypeAnnotation": "warning",
+
+  // 推論できない型の診断レベル
+  "reportUnknownVariableType": "information",
+  "reportUnknownMemberType": "information",
+  "reportUnknownParameterType": "information",
+  "reportUnknownArgumentType": "information",
+
+  // コールバック関数の型診断レベル
+  "reportCallInDefaultInitializer": "error",
+
+  // 暗黙的なstring concatenationの診断レベル
+  "reportImplicitStringConcatenation": "information",
+
+  // 型守護の診断レベル
+  "reportUnnecessaryIsInstance": "warning",
+  "reportUnnecessaryCast": "warning",
+
+  // ===============================================================================
+  // パフォーマンス・動作設定
+  // ===============================================================================
+
+  // 自動補完を有効にするか
+  "autoImportCompletions": true,
+
+  // 分析の詳細度を表示するか
+  "verboseOutput": false,
+
+  // 実行時間の測定を表示するか
+  "executionEnvironments": [
+    {
+      "root": ".",
+      "pythonVersion": "3.13",
+      "pythonPlatform": "All"
+    }
+  ]
+}

@@ -22,6 +22,7 @@ on:
       - config/yamlfix.toml
       - config/.shellcheckrc
       - config/.editorconfig
+      - pyrightconfig.json
       - .github/workflows/code_quality.yml
 
 jobs:
@@ -223,26 +224,67 @@ jobs:
           echo "FORMAT_STATUS=$FORMAT_STATUS" >> $GITHUB_OUTPUT
         continue-on-error: true
 
-      # ステップ7: レポートを統合
-      - name: 7. レポート統合
+      # ステップ7: Pyrightによる型チェック
+      - name: 7. Pyright型チェック実行
+        id: pyright_check
         run: |
-          # シェル、YAML、Ruffのレポートを統合
+          # Pyrightチェックの結果を保存
+          echo "## 🔍 Pyright型チェック結果" > pyright_report.md
+          echo "" >> pyright_report.md
+
+          # 型チェック
+          echo "### 型チェック結果" >> pyright_report.md
+          if uv run pyright > pyright_output.txt 2>&1; then
+            echo "✅ 型チェック: エラーなし" >> pyright_report.md
+            TYPE_CHECK_STATUS=0
+          else
+            echo "❌ 型チェック: エラーあり" >> pyright_report.md
+            echo '```' >> pyright_report.md
+            cat pyright_output.txt >> pyright_report.md
+            echo '```' >> pyright_report.md
+            TYPE_CHECK_STATUS=1
+          fi
+          echo "" >> pyright_report.md
+
+          # 修正方法
+          if [ $TYPE_CHECK_STATUS -ne 0 ]; then
+            echo "### 💡 型エラー修正方法" >> pyright_report.md
+            echo "以下のコマンドをローカルで実行してチェックしてください：" >> pyright_report.md
+            echo '```bash' >> pyright_report.md
+            echo "# 型チェック実行" >> pyright_report.md
+            echo "uv run pyright" >> pyright_report.md
+            echo '```' >> pyright_report.md
+            echo "" >> pyright_report.md
+            echo "型エラーは手動で修正する必要があります。" >> pyright_report.md
+            echo "型注釈の追加、型の修正、または設定の調整を行ってください。" >> pyright_report.md
+          fi
+
+          # 結果を出力に保存
+          echo "TYPE_CHECK_STATUS=$TYPE_CHECK_STATUS" >> $GITHUB_OUTPUT
+        continue-on-error: true
+
+      # ステップ8: レポートを統合
+      - name: 8. レポート統合
+        run: |
+          # シェル、YAML、Ruff、Pyrightのレポートを統合
           cat shell_report.md > combined_report.md
           echo "" >> combined_report.md
           cat yaml_report.md >> combined_report.md
           echo "" >> combined_report.md
           cat ruff_report.md >> combined_report.md
+          echo "" >> combined_report.md
+          cat pyright_report.md >> combined_report.md
 
-      # ステップ8: PRにコメントを投稿
-      - name: 8. PR コメントを投稿
+      # ステップ9: PRにコメントを投稿
+      - name: 9. PR コメントを投稿
         uses: thollander/actions-comment-pull-request@v3
         with:
           file-path: combined_report.md
           comment-tag: code_quality_check
           mode: recreate
 
-      # ステップ9: GitHub形式でエラーを表示
-      - name: 9. GitHub形式でエラー表示
+      # ステップ10: GitHub形式でエラーを表示
+      - name: 10. GitHub形式でエラー表示
         run: |
           # GitHub形式で再度実行（Actions UIでの視認性向上のため）
           echo "=== ShellCheck GitHub形式出力 ==="
@@ -255,15 +297,18 @@ jobs:
           echo "=== Ruff GitHub形式出力 ==="
           uv run ruff check --config config/ruff.toml \
             --output-format=github . 2>&1 || true
+          echo "=== Pyright GitHub形式出力 ==="
+          uv run pyright 2>&1 || true
 
-      # ステップ10: 失敗判定
-      - name: 10. チェック結果の判定
+      # ステップ11: 失敗判定
+      - name: 11. チェック結果の判定
         if: >-
           steps.shell_check.outputs.SHELL_LINT_STATUS != '0' ||
           steps.shell_check.outputs.SHELL_FORMAT_STATUS != '0' ||
           steps.yaml_check.outputs.YAML_LINT_STATUS != '0' ||
           steps.ruff_check.outputs.LINT_STATUS != '0' ||
-          steps.ruff_check.outputs.FORMAT_STATUS != '0'
+          steps.ruff_check.outputs.FORMAT_STATUS != '0' ||
+          steps.pyright_check.outputs.TYPE_CHECK_STATUS != '0'
         run: |-
           echo "❌ コード品質チェックでエラーが検出されました。"
           echo "詳細はPRのコメントを確認してください。"

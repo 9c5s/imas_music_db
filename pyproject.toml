@@ -21,4 +21,5 @@ dev = [
     "shfmt-py>=3.11.0.2",
     "google-auth-stubs>=0.3.0",
     "google-api-python-client-stubs>=1.29.0",
+    "pyright>=1.1.390",
 ]

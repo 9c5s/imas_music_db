@@ -21,7 +21,8 @@ show_help()
   echo "  shell-lint     - シェルスクリプトのリンティング"
   echo "  shell-format   - シェルスクリプトのフォーマット"
   echo "  shell-check    - シェルスクリプトの品質チェック（リント+フォーマット）"
-  echo "  test           - 全てのコード品質チェック"
+  echo "  type-check     - Pyrightによる型チェック"
+  echo "  test           - 全てのコード品質チェック（型チェック含む）"
   echo "  run            - メインスクリプトの実行"
   echo "  pr             - PR作成と自動監視"
   echo "  monitor        - 最新PRの監視"
@@ -83,10 +84,17 @@ case "${1:-help}" in
     uv run shfmt -i 2 -p -s -ci -sr -fn -d ./*.sh scripts/*.sh 2> /dev/null || echo "⚠️  一部のシェルスクリプトファイルが見つかりませんでした"
     echo "✅ シェルスクリプト品質チェックが完了しました"
     ;;
+  "type-check")
+    echo "🔍 Pyrightによる型チェックを実行中..."
+    uv run pyright
+    echo "✅ 型チェックが完了しました"
+    ;;
   "test")
     echo "🧪 全てのコード品質チェックを実行中..."
     echo "--- Pythonリンティング ---"
     uv run ruff check --config config/ruff.toml
+    echo "--- Python型チェック ---"
+    uv run pyright
     echo "--- YAMLリンティング ---"
     uv run yamllint -c config/yamllint.yml .
     echo "--- シェルスクリプトリンティング ---"
