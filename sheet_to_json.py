@@ -20,8 +20,6 @@ from typing import TYPE_CHECKING, Any, NotRequired, Self, TypedDict
 import google.auth
 import yaml
 from google.auth.exceptions import DefaultCredentialsError
-
-# Google APIリソースの型インポート
 from googleapiclient.discovery import build  # type: ignore[import]
 from googleapiclient.errors import HttpError
 
@@ -29,8 +27,12 @@ from googleapiclient.errors import HttpError
 if TYPE_CHECKING:
     from types import TracebackType
 
-    from googleapiclient._apis.drive.v3.resources import DriveResource
-    from googleapiclient._apis.sheets.v4.resources import SheetsResource
+    from googleapiclient._apis.drive.v3.resources import (  # type: ignore[import]
+        DriveResource,
+    )
+    from googleapiclient._apis.sheets.v4.resources import (  # type: ignore[import]
+        SheetsResource,
+    )
 
 
 # --- 型定義 ---
@@ -256,7 +258,6 @@ class SheetProcessor:
             if record.get(key):
                 seen: set[str] = set()
                 record[key] = [x for x in record[key] if not (x in seen or seen.add(x))]
-
 
         return record
 
