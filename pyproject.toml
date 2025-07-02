@@ -9,11 +9,6 @@ dependencies = [
     "google-auth>=2.40.3",
     "google-auth-httplib2>=0.2.0",
     "pyyaml>=6.0.2",
-    "google-auth-stubs>=0.3.0",
-    "google-api-python-client-stubs>=1.29.0",
-    "types-requests>=2.31.0",
-    "types-oauthlib>=3.2.0",
-    "types-httplib2>=0.22.0",
 ]
 
 [dependency-groups]
@@ -24,4 +19,6 @@ dev = [
     "yamlfix>=1.16.0",
     "shellcheck-py>=0.10.0",
     "shfmt-py>=3.8.0",
+    "google-auth-stubs>=0.3.0",
+    "google-api-python-client-stubs>=1.29.0",
 ]
