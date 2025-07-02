@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, NotRequired, Self, TypedDict
 
 import google.auth
+import yaml
 from google.auth.exceptions import DefaultCredentialsError
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
@@ -55,43 +56,73 @@ class Config(TypedDict):
     ignore_values: set[str]
 
 
-# --- 設定 (ここを編集してください) ---
-CONFIG: Config = {
-    # コピー元のスプレッドシートID
-    "source_spreadsheet_id": "14Q2A-eeXVDI_Qdb_z_Jwr5IwerDsr5kfRTzRw1J1z18",
-    # 読み取り対象のシート(タブ)の名前
-    "target_sheet_name": "#非表示_初出",
-    # 出力するJSONファイル名
-    "output_filename": "imas_music_db.json",
-    # データ構造に関する設定
-    "data_structure": {
-        # データが始まる行番号 (3行目)
-        "data_start_row": 3,
-        # データ終端を判定する列の範囲 (A列からO列)
-        "end_check_columns": ("A", "O"),
-    },
-    # 列とJSONキーのマッピング
-    "column_mapping": {
-        # 列文字: { key: JSONキー名, is_array: 配列にするか }
-        "B": {"key": "ID"},
-        "C": {"key": "曲名"},
-        "D": {"key": "よみがな"},
-        "E": {"key": "CD題"},
-        "F": {"key": "作詞", "is_array": True},
-        "G": {"key": "作曲", "is_array": True},
-        "H": {"key": "編曲", "is_array": True},
-        "I": {"key": "ブランド", "is_array": True},
-        "J": {"key": "時間"},
-        "K": {"key": "歌唱", "is_array": True},
-        "L": {"key": "歌唱", "is_array": True},  # Kと同じキーにマッピング
-        "M": {"key": "CD品番"},
-        "N": {"key": "CD名"},
-        "O": {"key": "発売日"},
-    },
-    # 空文字として扱う値のセット
-    "ignore_values": {"#不明", "未定", "#未定"},
-}
-# --- 設定ここまで ---
+# --- 設定読み込み機能 ---
+def load_config(config_path: str = "config/sheet_config.yml") -> Config:
+    """YAML設定ファイルを読み込み、Config型として返す
+
+    Args:
+        config_path: 設定ファイルのパス(デフォルト: config/sheet_config.yml)
+
+    Returns:
+        Config: 読み込んだ設定データ
+
+    Raises:
+        FileNotFoundError: 設定ファイルが見つからない場合
+        yaml.YAMLError: YAML解析エラーの場合
+        KeyError: 必須キーが不足している場合
+        ValueError: 設定値が不正な場合
+    """
+    config_file = Path(config_path)
+
+    if not config_file.exists():
+        error_message = f"設定ファイルが見つかりません: {config_file.resolve()}"
+        raise FileNotFoundError(error_message)
+
+    try:
+        with config_file.open("r", encoding="utf-8") as f:
+            yaml_data = yaml.safe_load(f)
+    except yaml.YAMLError as e:
+        error_message = f"YAML解析エラー: {e}"
+        raise yaml.YAMLError(error_message) from e
+
+    # YAML構造をConfig型に変換
+    try:
+        config: Config = {
+            "source_spreadsheet_id": yaml_data["spreadsheet"]["source_id"],
+            "target_sheet_name": yaml_data["spreadsheet"]["target_sheet"],
+            "output_filename": yaml_data["output"]["filename"],
+            "data_structure": {
+                "data_start_row": yaml_data["data_structure"]["data_start_row"],
+                # YAMLの辞書形式をtupleに変換
+                "end_check_columns": (
+                    yaml_data["data_structure"]["end_check_columns"]["start"],
+                    yaml_data["data_structure"]["end_check_columns"]["end"],
+                ),
+            },
+            "column_mapping": {
+                col: {
+                    "key": mapping["key"],
+                    **(
+                        {"is_array": mapping["is_array"]}
+                        if "is_array" in mapping
+                        else {}
+                    ),
+                }
+                for col, mapping in yaml_data["column_mapping"].items()
+            },
+            # YAMLのリストをsetに変換
+            "ignore_values": set(yaml_data["ignore_values"]),
+        }
+    except KeyError as e:
+        error_message = f"設定ファイルに必須キーが不足しています: {e}"
+        raise KeyError(error_message) from e
+    except (TypeError, ValueError) as e:
+        error_message = f"設定値が不正です: {e}"
+        raise ValueError(error_message) from e
+
+    return config
+
+
 
 # --- Google API スコープ ---
 SCOPES: list[str] = [
@@ -313,6 +344,14 @@ def main() -> None:
     """メイン処理"""
     print("--- スプレッドシートのデータ取得処理を開始します ---")
 
+    # 0. 設定ファイルの読み込み
+    try:
+        config = load_config()
+        print("[成功] 設定ファイルを読み込みました。")
+    except (FileNotFoundError, yaml.YAMLError, KeyError, ValueError) as e:
+        print(f"[エラー] 設定ファイルの読み込みに失敗しました: {e}")
+        return
+
     # 1. APIサービス初期化
     api_services = GoogleApiService()
     if (
@@ -324,12 +363,12 @@ def main() -> None:
 
     try:
         # 2. スプレッドシートを一時的にコピー (コンテキストマネージャ使用)
-        with SheetCopier(api_services.drive, CONFIG["source_spreadsheet_id"]) as copier:
+        with SheetCopier(api_services.drive, config["source_spreadsheet_id"]) as copier:
             if not copier.copied_file_id:
                 return
 
             # 3. シートからデータを取得
-            sheet_name = CONFIG["target_sheet_name"]
+            sheet_name = config["target_sheet_name"]
             print(f"\n[情報] シート '{sheet_name}' からデータを取得します...")
             try:
                 result = (
@@ -347,7 +386,7 @@ def main() -> None:
                 return
 
             sheet_data = result.get("values", [])
-            data_start_row = CONFIG["data_structure"]["data_start_row"]
+            data_start_row = config["data_structure"]["data_start_row"]
             if not sheet_data or len(sheet_data) < data_start_row:
                 print(
                     f"[警告] {data_start_row}行目以降のデータが見つかりませんでした。",
@@ -355,7 +394,7 @@ def main() -> None:
                 return
 
             # 4. データの処理と整形
-            processor = SheetProcessor(CONFIG)
+            processor = SheetProcessor(config)
             processed_data = processor.process(sheet_data)
 
             # 5. JSONに変換
@@ -366,7 +405,7 @@ def main() -> None:
             )
 
             # 6. ファイルに保存
-            output_path = Path(CONFIG["output_filename"])
+            output_path = Path(config["output_filename"])
             output_path.write_text(json_output, encoding="utf-8")
             print(f"\n[成功] JSONデータを {output_path.resolve()} に保存しました。")
 
