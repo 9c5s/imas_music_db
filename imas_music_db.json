@@ -1,5 +1,20 @@
 [
   {
+    "ID": "1870",
+    "曲名": "Berry Berry Lady",
+    "よみがな": "べりいべりいれでぃ",
+    "CD題": "Berry Berry Lady",
+    "作詞": [],
+    "作曲": [],
+    "編曲": [],
+    "ブランド": ["vα-liv"],
+    "時間": "",
+    "歌唱": ["灯里愛夏"],
+    "CD品番": "",
+    "CD名": "",
+    "発売日": ""
+  },
+  {
     "ID": "1869",
     "曲名": "Hug a nice day!",
     "よみがな": "はぐあないすでい",
@@ -7,7 +22,7 @@
     "作詞": [],
     "作曲": [],
     "編曲": [],
-    "ブランド": [],
+    "ブランド": ["ミリオン"],
     "時間": "",
     "歌唱": [],
     "CD品番": "",
@@ -67,7 +82,7 @@
       "和泉愛依"
     ],
     "CD品番": "LACM-24702",
-    "CD名": "#発売前:THE IDOLM@STER SHINY COLORS “円環―Halo around―” 02",
+    "CD名": "THE IDOLM@STER SHINY COLORS “円環―Halo around―” 02",
     "発売日": "2025-07-02"
   },
   {
@@ -97,7 +112,7 @@
     "時間": "",
     "歌唱": ["ストレイライト", "芹沢あさひ", "黛冬優子", "和泉愛依"],
     "CD品番": "LACM-24702",
-    "CD名": "#発売前:THE IDOLM@STER SHINY COLORS “円環―Halo around―” 02",
+    "CD名": "THE IDOLM@STER SHINY COLORS “円環―Halo around―” 02",
     "発売日": "2025-07-02"
   },
   {
@@ -119,7 +134,7 @@
       "有栖川夏葉"
     ],
     "CD品番": "LACM-24702",
-    "CD名": "#発売前:THE IDOLM@STER SHINY COLORS “円環―Halo around―” 02",
+    "CD名": "THE IDOLM@STER SHINY COLORS “円環―Halo around―” 02",
     "発売日": "2025-07-02"
   },
   {
