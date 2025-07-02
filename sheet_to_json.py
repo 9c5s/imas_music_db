@@ -123,7 +123,6 @@ def load_config(config_path: str = "config/sheet_config.yml") -> Config:
     return config
 
 
-
 # --- Google API スコープ ---
 SCOPES: list[str] = [
     "https://www.googleapis.com/auth/drive",
