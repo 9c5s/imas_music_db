@@ -128,12 +128,16 @@ class AutoPR:
         """監視スクリプトを実行"""
         try:
             # uvを使ってmonitor_pr.pyを実行
-            subprocess.run(
+            result = subprocess.run(
                 ["uv", "run", "python", "scripts/monitor_pr.py", str(pr_number)],
                 check=True,
             )
-        except subprocess.CalledProcessError:
-            print("❌ 監視スクリプトの実行でエラーが発生しました")
+            print(f"✅ PR#{pr_number} の監視が正常に完了しました")
+        except subprocess.CalledProcessError as e:
+            print(f"❌ 監視スクリプトの実行でエラーが発生しました: {e}")
+            print("💡 GitHub CLIの認証状態を確認してください")
+        except KeyboardInterrupt:
+            print(f"👋 PR#{pr_number} の監視を中断しました")
         finally:
             self.monitoring = False
 
