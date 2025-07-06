@@ -128,7 +128,7 @@ class AutoPR:
         """監視スクリプトを実行"""
         try:
             # uvを使ってmonitor_pr.pyを実行
-            result = subprocess.run(
+            subprocess.run(
                 ["uv", "run", "python", "scripts/monitor_pr.py", str(pr_number)],
                 check=True,
             )

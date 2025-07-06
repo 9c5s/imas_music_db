@@ -244,7 +244,8 @@ def monitor_pr(pr_number: int, check_interval: int = 10) -> None:
             if all_complete:
                 if failed_checks:
                     print(
-                        f"\n[{timestamp}] ⚠️ 全てのチェックが完了しましたが、{len(failed_checks)}個のチェックが失敗しました",
+                        f"\n[{timestamp}] ⚠️ 全てのチェックが完了しましたが、"
+                        f"{len(failed_checks)}個のチェックが失敗しました",
                         flush=True,
                     )
                 else:
