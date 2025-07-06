@@ -23,7 +23,6 @@ from google.auth.exceptions import DefaultCredentialsError
 from googleapiclient.discovery import build  # type: ignore[import]
 from googleapiclient.errors import HttpError
 
-
 if TYPE_CHECKING:
     from types import TracebackType
 
