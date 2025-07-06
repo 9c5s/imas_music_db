@@ -83,20 +83,31 @@ def format_check_status(checks: list[dict[str, Any]]) -> str:
     if not checks:
         return "⏳ チェック待機中..."
 
-    status_icons = {
+    conclusion_icons = {
         "SUCCESS": "✅",
         "FAILURE": "❌",
-        "PENDING": "⏳",
-        "IN_PROGRESS": "🔄",
         "NEUTRAL": "⚪",
         "SKIPPED": "⏭️",
     }
 
+    status_icons = {
+        "PENDING": "⏳",
+        "IN_PROGRESS": "🔄",
+        "COMPLETED": "",  # conclusionアイコンを使用
+    }
+
     results: list[str] = []
     for check in checks:
-        check_state: str = check.get("state", "UNKNOWN")
-        icon: str = status_icons.get(check_state, "❓")
+        check_status: str = check.get("status", "UNKNOWN")
+        check_conclusion: str = check.get("conclusion", "UNKNOWN")
         name: str = check.get("name", "Unknown")
+
+        # ステータスがCOMPLETEDの場合はconclusionアイコンを使用
+        if check_status == "COMPLETED":
+            icon: str = conclusion_icons.get(check_conclusion, "❓")
+        else:
+            icon = status_icons.get(check_status, "❓")
+
         results.append(f"{icon} {name}")
 
     return "\n".join(results)
@@ -204,22 +215,43 @@ def monitor_pr(pr_number: int, check_interval: int = 10) -> None:
         print(f"[{timestamp}] 🔍 完了状況を確認中...", flush=True)
         if checks:
             completed_checks = [
-                check
-                for check in checks
-                if check.get("state") in ["SUCCESS", "FAILURE", "NEUTRAL", "SKIPPED"]
+                check for check in checks if check.get("status") == "COMPLETED"
             ]
             pending_checks = [
                 check
                 for check in checks
-                if check.get("state") in ["PENDING", "IN_PROGRESS"]
+                if check.get("status") in ["PENDING", "IN_PROGRESS"]
+            ]
+
+            # 失敗したチェックを特定
+            failed_checks = [
+                check
+                for check in completed_checks
+                if check.get("conclusion") == "FAILURE"
             ]
 
             print(f"[{timestamp}] ✅ 完了済み: {len(completed_checks)}個", flush=True)
             print(f"[{timestamp}] ⏳ 実行中: {len(pending_checks)}個", flush=True)
 
+            if failed_checks:
+                print(f"[{timestamp}] ❌ 失敗: {len(failed_checks)}個", flush=True)
+                for failed_check in failed_checks:
+                    check_name = failed_check.get("name", "Unknown")
+                    details_url = failed_check.get("detailsUrl", "")
+                    print(f"[{timestamp}] ❌ {check_name}: {details_url}", flush=True)
+
             all_complete = len(pending_checks) == 0
             if all_complete:
-                print(f"\n[{timestamp}] 🎉 全てのチェックが完了しました!", flush=True)
+                if failed_checks:
+                    print(
+                        f"\n[{timestamp}] ⚠️ 全てのチェックが完了しましたが、"
+                        f"{len(failed_checks)}個のチェックが失敗しました",
+                        flush=True,
+                    )
+                else:
+                    print(
+                        f"\n[{timestamp}] 🎉 全てのチェックが完了しました!", flush=True
+                    )
                 break
         else:
             print(f"[{timestamp}] ❓ チェック情報が見つかりません", flush=True)
