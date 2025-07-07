@@ -56,11 +56,11 @@ jobs:
         run: |
           uv run sheet_to_json.py
           if [ -f imas_music_db.json ]; then
-            echo "JSON_EXISTS=true" >> $GITHUB_OUTPUT
-            echo "json_file_path=$(pwd)/imas_music_db.json" >> $GITHUB_OUTPUT
+            echo "JSON_EXISTS=true" >> "$GITHUB_OUTPUT"
+            echo "json_file_path=$(pwd)/imas_music_db.json" >> "$GITHUB_OUTPUT"
             echo "✅ JSONファイルが正常に生成されました。"
           else
-            echo "JSON_EXISTS=false" >> $GITHUB_OUTPUT
+            echo "JSON_EXISTS=false" >> "$GITHUB_OUTPUT"
             echo "❌ エラー: JSONファイルが生成されませんでした。"
             exit 1
           fi
@@ -94,7 +94,7 @@ jobs:
         id: commit_push
         run: |
           # 後続のステップのためにデフォルト出力を設定
-          echo "committed=false" >> $GITHUB_OUTPUT
+          echo "committed=false" >> "$GITHUB_OUTPUT"
 
           # 生成されたJSONファイルをデータ用のディレクトリにコピー
           cp ${{ steps.generate_json.outputs.json_file_path }} \
@@ -120,8 +120,8 @@ jobs:
             echo "✅ dataブランチにコミットをプッシュしました。"
 
             # 後続ステップのために出力を更新
-            echo "committed=true" >> $GITHUB_OUTPUT
-            echo "tag_name=${TAG_NAME}" >> $GITHUB_OUTPUT
+            echo "committed=true" >> "$GITHUB_OUTPUT"
+            echo "tag_name=${TAG_NAME}" >> "$GITHUB_OUTPUT"
           else
             echo "✅ imas_music_db.json に変更はありません。"
           fi
