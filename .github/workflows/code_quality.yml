@@ -9,21 +9,6 @@ on:
       - opened
       - synchronize
       - reopened
-    # Python、YAML、シェルスクリプトファイルが変更された場合のみ実行
-    paths:
-      - '**.py'
-      - '**.yml'
-      - '**.yaml'
-      - '**.sh'
-      - '**.bash'
-      - pyproject.toml
-      - config/ruff.toml
-      - config/yamllint.yml
-      - config/yamlfix.toml
-      - config/.shellcheckrc
-      - config/.editorconfig
-      - pyrightconfig.json
-      - .github/workflows/code_quality.yml
 
 jobs:
   code-quality:
@@ -57,6 +42,14 @@ jobs:
           # シェルスクリプトチェックの結果を保存
           echo "## 🐚 シェルスクリプト品質チェック結果" > shell_report.md
           echo "" >> shell_report.md
+
+          # 対象ファイルの存在確認
+          if ! find . -name "*.sh" -o -name "*.bash" | grep -q .; then
+            echo "✅ 対象ファイルなし: シェルスクリプトファイルが見つかりません" >> shell_report.md
+            echo "SHELL_LINT_STATUS=0" >> $GITHUB_OUTPUT
+            echo "SHELL_FORMAT_STATUS=0" >> $GITHUB_OUTPUT
+            exit 0
+          fi
 
           # shellcheckチェック
           echo "### ShellCheck結果" >> shell_report.md
@@ -123,6 +116,14 @@ jobs:
           echo "## 📄 YAMLコード品質チェック結果" > yaml_report.md
           echo "" >> yaml_report.md
 
+          # 対象ファイルの存在確認
+          if ! find . \( -name "*.yml" -o -name "*.yaml" \) \
+              -not -path "./node_modules/*" | grep -q .; then
+            echo "✅ 対象ファイルなし: YAMLファイルが見つかりません" >> yaml_report.md
+            echo "YAML_LINT_STATUS=0" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
           # yamllintチェック
           echo "### yamllint結果" >> yaml_report.md
           if uv run yamllint -c config/yamllint.yml . >\
@@ -162,6 +163,15 @@ jobs:
           # Ruffチェックの結果を保存
           echo "## 🔍 Ruffコード品質チェック結果" > ruff_report.md
           echo "" >> ruff_report.md
+
+          # 対象ファイルの存在確認
+          if ! find . -name "*.py" -not -path "./node_modules/*" | \
+              grep -q .; then
+            echo "✅ 対象ファイルなし: Pythonファイルが見つかりません" >> ruff_report.md
+            echo "LINT_STATUS=0" >> $GITHUB_OUTPUT
+            echo "FORMAT_STATUS=0" >> $GITHUB_OUTPUT
+            exit 0
+          fi
 
           # リンティング
           echo "### リンティング結果" >> ruff_report.md
@@ -232,6 +242,14 @@ jobs:
           echo "## 🔍 Pyright型チェック結果" > pyright_report.md
           echo "" >> pyright_report.md
 
+          # 対象ファイルの存在確認
+          if ! find . -name "*.py" -not -path "./node_modules/*" | \
+              grep -q .; then
+            echo "✅ 対象ファイルなし: Pythonファイルが見つかりません" >> pyright_report.md
+            echo "TYPE_CHECK_STATUS=0" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
           # 型チェック
           echo "### 型チェック結果" >> pyright_report.md
           if uv run pyright > pyright_output.txt 2>&1; then
@@ -288,17 +306,36 @@ jobs:
         run: |
           # GitHub形式で再度実行（Actions UIでの視認性向上のため）
           echo "=== ShellCheck GitHub形式出力 ==="
-          find . -name "*.sh" -o -name "*.bash" | \
-            xargs -r uv run shellcheck --rcfile=config/.shellcheckrc \
-            --format=gcc . 2>&1 || true
+          if find . -name "*.sh" -o -name "*.bash" | grep -q .; then
+            find . -name "*.sh" -o -name "*.bash" | \
+              xargs -r uv run shellcheck --rcfile=config/.shellcheckrc \
+              --format=gcc . 2>&1 || true
+          else
+            echo "対象ファイルなし: シェルスクリプトファイルが見つかりません"
+          fi
           echo "=== yamllint GitHub形式出力 ==="
-          uv run yamllint -c config/yamllint.yml \
-            --format github . 2>&1 || true
+          if find . \( -name "*.yml" -o -name "*.yaml" \) \
+              -not -path "./node_modules/*" | grep -q .; then
+            uv run yamllint -c config/yamllint.yml \
+              --format github . 2>&1 || true
+          else
+            echo "対象ファイルなし: YAMLファイルが見つかりません"
+          fi
           echo "=== Ruff GitHub形式出力 ==="
-          uv run ruff check --config config/ruff.toml \
-            --output-format=github . 2>&1 || true
+          if find . -name "*.py" -not -path "./node_modules/*" | \
+              grep -q .; then
+            uv run ruff check --config config/ruff.toml \
+              --output-format=github . 2>&1 || true
+          else
+            echo "対象ファイルなし: Pythonファイルが見つかりません"
+          fi
           echo "=== Pyright GitHub形式出力 ==="
-          uv run pyright 2>&1 || true
+          if find . -name "*.py" -not -path "./node_modules/*" | \
+              grep -q .; then
+            uv run pyright 2>&1 || true
+          else
+            echo "対象ファイルなし: Pythonファイルが見つかりません"
+          fi
 
       # ステップ11: 失敗判定
       - name: 11. チェック結果の判定
