@@ -38,13 +38,14 @@ jobs:
 
       # ステップ3: uvをセットアップする（高速なPythonパッケージマネージャー）
       - name: 3. uvのセットアップ
-        uses: astral-sh/setup-uv@v4
+        uses: astral-sh/setup-uv@v6
         with:
           enable-cache: true
-          cache-dependency-glob: pyproject.toml
+          cache-dependency-glob: main_repo/pyproject.toml
 
       # ステップ4: 依存ライブラリのインストール（本番依存関係のみ）
       - name: 4. 依存ライブラリのインストール
+        working-directory: ./main_repo
         run: |
           uv sync --no-dev
 
@@ -55,11 +56,11 @@ jobs:
         run: |
           uv run sheet_to_json.py
           if [ -f imas_music_db.json ]; then
-            echo "JSON_EXISTS=true" >> $GITHUB_OUTPUT
-            echo "json_file_path=$(pwd)/imas_music_db.json" >> $GITHUB_OUTPUT
+            echo "JSON_EXISTS=true" >> "$GITHUB_OUTPUT"
+            echo "json_file_path=$(pwd)/imas_music_db.json" >> "$GITHUB_OUTPUT"
             echo "✅ JSONファイルが正常に生成されました。"
           else
-            echo "JSON_EXISTS=false" >> $GITHUB_OUTPUT
+            echo "JSON_EXISTS=false" >> "$GITHUB_OUTPUT"
             echo "❌ エラー: JSONファイルが生成されませんでした。"
             exit 1
           fi
@@ -93,7 +94,7 @@ jobs:
         id: commit_push
         run: |
           # 後続のステップのためにデフォルト出力を設定
-          echo "committed=false" >> $GITHUB_OUTPUT
+          echo "committed=false" >> "$GITHUB_OUTPUT"
 
           # 生成されたJSONファイルをデータ用のディレクトリにコピー
           cp ${{ steps.generate_json.outputs.json_file_path }} \
@@ -119,8 +120,8 @@ jobs:
             echo "✅ dataブランチにコミットをプッシュしました。"
 
             # 後続ステップのために出力を更新
-            echo "committed=true" >> $GITHUB_OUTPUT
-            echo "tag_name=${TAG_NAME}" >> $GITHUB_OUTPUT
+            echo "committed=true" >> "$GITHUB_OUTPUT"
+            echo "tag_name=${TAG_NAME}" >> "$GITHUB_OUTPUT"
           else
             echo "✅ imas_music_db.json に変更はありません。"
           fi
