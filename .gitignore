@@ -36,6 +36,7 @@ Thumbs.db
 *.log
 temp/
 tmp/
+imas_music_db.json
 
 # Package managers
 .python-version
