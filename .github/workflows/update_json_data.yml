@@ -36,21 +36,28 @@ jobs:
             ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
 
-      # ステップ3: uvをセットアップする（高速なPythonパッケージマネージャー）
-      - name: 3. uvのセットアップ
+      # ステップ3: uvバージョン検出のためのシンボリックリンク作成
+      - name: 3. uvセットアップ準備
+        run: |
+          # uvがpyproject.tomlを検出できるようにシンボリックリンクを作成
+          ln -s main_repo/pyproject.toml pyproject.toml || true
+          echo "✔️ pyproject.tomlへのシンボリックリンクを作成しました。"
+
+      # ステップ4: uvをセットアップする（高速なPythonパッケージマネージャー）
+      - name: 4. uvのセットアップ
         uses: astral-sh/setup-uv@v6
         with:
           enable-cache: true
           cache-dependency-glob: main_repo/pyproject.toml
 
-      # ステップ4: 依存ライブラリのインストール（本番依存関係のみ）
-      - name: 4. 依存ライブラリのインストール
+      # ステップ5: 依存ライブラリのインストール（本番依存関係のみ）
+      - name: 5. 依存ライブラリのインストール
         working-directory: ./main_repo
         run: |
           uv sync --no-dev
 
-        # ステップ5: Pythonスクリプトを実行してJSONファイルを生成する
-      - name: 5. Pythonスクリプトを実行してJSONを生成
+        # ステップ6: Pythonスクリプトを実行してJSONファイルを生成する
+      - name: 6. Pythonスクリプトを実行してJSONを生成
         id: generate_json
         working-directory: ./main_repo
         run: |
@@ -65,31 +72,31 @@ jobs:
             exit 1
           fi
 
-      # ステップ6: Node.js環境をセットアップする
-      - name: 6. Node.js環境のセットアップ
+      # ステップ7: Node.js環境をセットアップする
+      - name: 7. Node.js環境のセットアップ
         if: steps.generate_json.outputs.JSON_EXISTS == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: '20'  # LTS版のNode.jsを使用
 
-      # ステップ7: PrettierでJSONファイルをフォーマットする
-      - name: 7. PrettierでJSONをフォーマット
+      # ステップ8: PrettierでJSONファイルをフォーマットする
+      - name: 8. PrettierでJSONをフォーマット
         if: steps.generate_json.outputs.JSON_EXISTS == 'true'
         run: |
           npm install -g prettier
           prettier --write ${{ steps.generate_json.outputs.json_file_path }}
           echo "💅 JSONファイルがPrettierでフォーマットされました。"
 
-      # ステップ8: 生成されたデータをコミットするブランチ(data)をチェックアウトする
-      - name: 8. データコミット用リポジトリをチェックアウト (data)
+      # ステップ9: 生成されたデータをコミットするブランチ(data)をチェックアウトする
+      - name: 9. データコミット用リポジトリをチェックアウト (data)
         if: steps.generate_json.outputs.JSON_EXISTS == 'true'
         uses: actions/checkout@v4
         with:
           ref: data
           path: data_repo
 
-      # ステップ9: データの差分があればコミットしてプッシュする
-      - name: 9. 差分をコミットしてプッシュ
+      # ステップ10: データの差分があればコミットしてプッシュする
+      - name: 10. 差分をコミットしてプッシュ
         if: steps.generate_json.outputs.JSON_EXISTS == 'true'
         id: commit_push
         run: |
@@ -126,8 +133,8 @@ jobs:
             echo "✅ imas_music_db.json に変更はありません。"
           fi
 
-      # ステップ10: 新しいデータでリリースを作成する
-      - name: 10. リリースを作成
+      # ステップ11: 新しいデータでリリースを作成する
+      - name: 11. リリースを作成
         if: steps.commit_push.outputs.committed == 'true'
         id: create_release
         uses: actions/create-release@v1
@@ -143,8 +150,8 @@ jobs:
           # dataブランチの最新コミットからリリースを作成
           commitish: data
 
-      # ステップ11: 生成されたJSONファイルをリリースに添付する
-      - name: 11. リリースアセットをアップロード
+      # ステップ12: 生成されたJSONファイルをリリースに添付する
+      - name: 12. リリースアセットをアップロード
         if: steps.commit_push.outputs.committed == 'true'
         uses: actions/upload-release-asset@v1
         env:
