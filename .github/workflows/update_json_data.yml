@@ -41,10 +41,11 @@ jobs:
         uses: astral-sh/setup-uv@v4
         with:
           enable-cache: true
-          cache-dependency-glob: pyproject.toml
+          cache-dependency-glob: main_repo/pyproject.toml
 
       # ステップ4: 依存ライブラリのインストール（本番依存関係のみ）
       - name: 4. 依存ライブラリのインストール
+        working-directory: ./main_repo
         run: |
           uv sync --no-dev
 
