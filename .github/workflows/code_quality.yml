@@ -117,7 +117,8 @@ jobs:
           echo "" >> yaml_report.md
 
           # 対象ファイルの存在確認
-          if ! find . \( -name "*.yml" -o -name "*.yaml" \) -not -path "./node_modules/*" | grep -q .; then
+          if ! find . \( -name "*.yml" -o -name "*.yaml" \) \
+              -not -path "./node_modules/*" | grep -q .; then
             echo "✅ 対象ファイルなし: YAMLファイルが見つかりません" >> yaml_report.md
             echo "YAML_LINT_STATUS=0" >> $GITHUB_OUTPUT
             exit 0
@@ -164,7 +165,8 @@ jobs:
           echo "" >> ruff_report.md
 
           # 対象ファイルの存在確認
-          if ! find . -name "*.py" -not -path "./node_modules/*" | grep -q .; then
+          if ! find . -name "*.py" -not -path "./node_modules/*" | \
+              grep -q .; then
             echo "✅ 対象ファイルなし: Pythonファイルが見つかりません" >> ruff_report.md
             echo "LINT_STATUS=0" >> $GITHUB_OUTPUT
             echo "FORMAT_STATUS=0" >> $GITHUB_OUTPUT
@@ -241,7 +243,8 @@ jobs:
           echo "" >> pyright_report.md
 
           # 対象ファイルの存在確認
-          if ! find . -name "*.py" -not -path "./node_modules/*" | grep -q .; then
+          if ! find . -name "*.py" -not -path "./node_modules/*" | \
+              grep -q .; then
             echo "✅ 対象ファイルなし: Pythonファイルが見つかりません" >> pyright_report.md
             echo "TYPE_CHECK_STATUS=0" >> $GITHUB_OUTPUT
             exit 0
@@ -311,21 +314,24 @@ jobs:
             echo "対象ファイルなし: シェルスクリプトファイルが見つかりません"
           fi
           echo "=== yamllint GitHub形式出力 ==="
-          if find . \( -name "*.yml" -o -name "*.yaml" \) -not -path "./node_modules/*" | grep -q .; then
+          if find . \( -name "*.yml" -o -name "*.yaml" \) \
+              -not -path "./node_modules/*" | grep -q .; then
             uv run yamllint -c config/yamllint.yml \
               --format github . 2>&1 || true
           else
             echo "対象ファイルなし: YAMLファイルが見つかりません"
           fi
           echo "=== Ruff GitHub形式出力 ==="
-          if find . -name "*.py" -not -path "./node_modules/*" | grep -q .; then
+          if find . -name "*.py" -not -path "./node_modules/*" | \
+              grep -q .; then
             uv run ruff check --config config/ruff.toml \
               --output-format=github . 2>&1 || true
           else
             echo "対象ファイルなし: Pythonファイルが見つかりません"
           fi
           echo "=== Pyright GitHub形式出力 ==="
-          if find . -name "*.py" -not -path "./node_modules/*" | grep -q .; then
+          if find . -name "*.py" -not -path "./node_modules/*" | \
+              grep -q .; then
             uv run pyright 2>&1 || true
           else
             echo "対象ファイルなし: Pythonファイルが見つかりません"
