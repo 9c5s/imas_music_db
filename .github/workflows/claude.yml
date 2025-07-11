@@ -20,14 +20,18 @@ jobs:
   claude:
     if: |
       (github.event_name == 'issue_comment' &&
-       contains(github.event.comment.body, '@claude')) ||
+       contains(github.event.comment.body, '@claude') &&
+       github.event.comment.author_association == 'OWNER') ||
       (github.event_name == 'pull_request_review_comment' &&
-       contains(github.event.comment.body, '@claude')) ||
+       contains(github.event.comment.body, '@claude') &&
+       github.event.comment.author_association == 'OWNER') ||
       (github.event_name == 'pull_request_review' &&
-       contains(github.event.review.body, '@claude')) ||
+       contains(github.event.review.body, '@claude') &&
+       github.event.review.author_association == 'OWNER') ||
       (github.event_name == 'issues' &&
        (contains(github.event.issue.body, '@claude') ||
-        contains(github.event.issue.title, '@claude')))
+        contains(github.event.issue.title, '@claude')) &&
+       github.event.issue.author_association == 'OWNER')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -59,9 +63,7 @@ jobs:
           # Optional: Trigger when specific user is assigned to an issue
           # assignee_trigger: "claude-bot"
           # Optional: Allow Claude to run specific commands
-          # allowed_tools:
-          #   "Bash(npm install),Bash(npm run build),
-          #    Bash(npm run test:*),Bash(npm run lint:*)"
+          allowed_tools: "*"
           # Optional: Add custom instructions for Claude to
           # customize its behavior for your project
           # custom_instructions: |
