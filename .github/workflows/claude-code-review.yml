@@ -69,6 +69,8 @@ jobs:
           #        our coding standards and best practices.' }}
           # Optional: Add specific tools for running tests or linting
           allowed_tools: "*"
+          custom_instructions: |
+            必ず日本語で思考して日本語で応答する
           # Optional: Skip review for certain conditions
           # if: |
           #   !contains(github.event.pull_request.title, '[skip-review]') &&
