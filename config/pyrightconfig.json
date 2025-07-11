@@ -12,7 +12,7 @@
   "pythonVersion": "3.13",
 
   // Pythonプラットフォームの指定（Darwin: macOS, Linux, Windows）
-  "pythonPlatform": "All",
+  "pythonPlatform": "Linux",
 
   // 分析対象のルートディレクトリ
   // config/ディレクトリからプロジェクトルートを指定
@@ -83,7 +83,7 @@
     {
       "root": "..",
       "pythonVersion": "3.13",
-      "pythonPlatform": "All"
+      "pythonPlatform": "Linux"
     }
   ]
 }
