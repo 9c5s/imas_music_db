@@ -252,7 +252,7 @@ jobs:
 
           # 型チェック
           echo "### 型チェック結果" >> pyright_report.md
-          if uv run pyright > pyright_output.txt 2>&1; then
+          if uv run pyright -p config/pyrightconfig.json > pyright_output.txt 2>&1; then
             echo "✅ 型チェック: エラーなし" >> pyright_report.md
             TYPE_CHECK_STATUS=0
           else
@@ -270,7 +270,7 @@ jobs:
             echo "以下のコマンドをローカルで実行してチェックしてください：" >> pyright_report.md
             echo '```bash' >> pyright_report.md
             echo "# 型チェック実行" >> pyright_report.md
-            echo "uv run pyright" >> pyright_report.md
+            echo "uv run pyright -p config/pyrightconfig.json" >> pyright_report.md
             echo '```' >> pyright_report.md
             echo "" >> pyright_report.md
             echo "型エラーは手動で修正する必要があります。" >> pyright_report.md
@@ -332,7 +332,7 @@ jobs:
           echo "=== Pyright GitHub形式出力 ==="
           if find . -name "*.py" -not -path "./node_modules/*" | \
               grep -q .; then
-            uv run pyright 2>&1 || true
+            uv run pyright -p config/pyrightconfig.json 2>&1 || true
           else
             echo "対象ファイルなし: Pythonファイルが見つかりません"
           fi
