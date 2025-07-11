@@ -75,7 +75,7 @@ jobs:
       # ステップ7: Bun環境をセットアップする
       - name: 7. Bun環境のセットアップ
         if: steps.generate_json.outputs.JSON_EXISTS == 'true'
-        uses: oven-sh/setup-bun@v2.0.2
+        uses: oven-sh/setup-bun@v2
         with:
           bun-version: 'latest'  # 最新版のBunを使用
 
