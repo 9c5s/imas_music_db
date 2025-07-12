@@ -281,58 +281,67 @@ jobs:
           echo "TYPE_CHECK_STATUS=$TYPE_CHECK_STATUS" >> $GITHUB_OUTPUT
         continue-on-error: true
 
-      # ステップ8: レポートを統合（サイズ制限付き）
+      # ステップ8: 簡潔なサマリーレポートの作成
       - name: 8. レポート統合
         run: |
-          # レポートのサイズ制限（30KB、十分な余裕を持たせる）
-          MAX_SIZE=30720
+          # 簡潔なサマリーレポートを作成（詳細はGitHub Actions UIで確認）
+          cat > combined_report.md << 'EOF'
+          # 🔍 コード品質チェック結果サマリー
           
-          # 長いエラー出力を切り詰める関数
-          truncate_report() {
-            local file="$1"
-            local max_lines="$2"
-            
-            if [ -f "$file" ]; then
-              local line_count=$(wc -l < "$file")
-              if [ "$line_count" -gt "$max_lines" ]; then
-                head -n "$max_lines" "$file" > "${file}.tmp"
-                echo "" >> "${file}.tmp"
-                echo "... (出力が長すぎるため切り詰められました。" >> "${file}.tmp"
-                echo "残り $((line_count - max_lines)) 行の詳細はGitHub Actions UIで確認してください)" >> "${file}.tmp"
-                mv "${file}.tmp" "$file"
-              fi
-            fi
-          }
+          EOF
           
-          # 各レポートを大幅に切り詰め（エラー部分を最大50行に制限）
-          truncate_report shell_report.md 50
-          truncate_report yaml_report.md 50
-          truncate_report ruff_report.md 50
-          truncate_report pyright_report.md 50
-          
-          # レポートを統合
-          cat shell_report.md > combined_report.md
+          # 各チェックの結果をサマリー形式で統合
+          echo "## 📊 チェック結果一覧" >> combined_report.md
           echo "" >> combined_report.md
-          cat yaml_report.md >> combined_report.md
-          echo "" >> combined_report.md
-          cat ruff_report.md >> combined_report.md
-          echo "" >> combined_report.md
-          cat pyright_report.md >> combined_report.md
           
-          # 最終サイズチェック
-          report_size=$(wc -c < combined_report.md)
-          if [ "$report_size" -gt "$MAX_SIZE" ]; then
-            echo "⚠️ レポートが大きすぎます ($report_size bytes > $MAX_SIZE bytes)" >&2
-            # さらに大幅に短縮（300行に制限）
-            head -n 300 combined_report.md > combined_report_truncated.md
-            echo "" >> combined_report_truncated.md
-            echo "---" >> combined_report_truncated.md
-            echo "⚠️ **レポートが長すぎるため切り詰められました**" >> combined_report_truncated.md
-            echo "完全な詳細はGitHub Actions UIのログで確認してください。" >> combined_report_truncated.md
-            echo "" >> combined_report_truncated.md
-            echo "📋 **修正方法**: \`uv run ruff check --fix --config config/ruff.toml\` など" >> combined_report_truncated.md
-            mv combined_report_truncated.md combined_report.md
+          # Shell Check結果
+          if [ "${{ steps.shell_check.outputs.SHELL_LINT_STATUS }}" = "0" ] && \
+             [ "${{ steps.shell_check.outputs.SHELL_FORMAT_STATUS }}" = "0" ]; then
+            echo "✅ **シェルスクリプト**: 問題なし" >> combined_report.md
+          else
+            echo "❌ **シェルスクリプト**: エラーあり" >> combined_report.md
           fi
+          
+          # YAML Check結果
+          if [ "${{ steps.yaml_check.outputs.YAML_LINT_STATUS }}" = "0" ]; then
+            echo "✅ **YAML**: 問題なし" >> combined_report.md
+          else
+            echo "❌ **YAML**: エラーあり" >> combined_report.md
+          fi
+          
+          # Ruff Check結果
+          if [ "${{ steps.ruff_check.outputs.LINT_STATUS }}" = "0" ] && \
+             [ "${{ steps.ruff_check.outputs.FORMAT_STATUS }}" = "0" ]; then
+            echo "✅ **Python (Ruff)**: 問題なし" >> combined_report.md
+          else
+            echo "❌ **Python (Ruff)**: エラーあり" >> combined_report.md
+          fi
+          
+          # Pyright Check結果
+          if [ "${{ steps.pyright_check.outputs.TYPE_CHECK_STATUS }}" = "0" ]; then
+            echo "✅ **型チェック (Pyright)**: 問題なし" >> combined_report.md
+          else
+            echo "❌ **型チェック (Pyright)**: エラーあり" >> combined_report.md
+          fi
+          
+          echo "" >> combined_report.md
+          echo "## 🔧 修正方法" >> combined_report.md
+          echo "" >> combined_report.md
+          echo "エラーがある場合は、以下のコマンドをローカルで実行してください：" >> combined_report.md
+          echo "" >> combined_report.md
+          echo "\`\`\`bash" >> combined_report.md
+          echo "# Python (Ruff)" >> combined_report.md
+          echo "uv run ruff check --fix --config config/ruff.toml" >> combined_report.md
+          echo "uv run ruff format --config config/ruff.toml" >> combined_report.md
+          echo "" >> combined_report.md
+          echo "# YAML" >> combined_report.md
+          echo "uv run yamlfix -c config/yamlfix.toml ." >> combined_report.md
+          echo "" >> combined_report.md
+          echo "# Shell" >> combined_report.md
+          echo "uv run shfmt -i 2 -p -s -ci -sr -fn -w ./*.sh scripts/*.sh" >> combined_report.md
+          echo "\`\`\`" >> combined_report.md
+          echo "" >> combined_report.md
+          echo "📝 **詳細なエラー内容**: [GitHub Actions UI](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) で確認してください。" >> combined_report.md
           
           echo "📊 最終レポートサイズ: $(wc -c < combined_report.md) bytes"
 
