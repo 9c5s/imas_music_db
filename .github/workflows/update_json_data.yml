@@ -72,18 +72,18 @@ jobs:
             exit 1
           fi
 
-      # ステップ7: Node.js環境をセットアップする
-      - name: 7. Node.js環境のセットアップ
+      # ステップ7: Bun環境をセットアップする
+      - name: 7. Bun環境のセットアップ
         if: steps.generate_json.outputs.JSON_EXISTS == 'true'
-        uses: actions/setup-node@v4
+        uses: oven-sh/setup-bun@v2
         with:
-          node-version: '20'  # LTS版のNode.jsを使用
+          bun-version: 'latest'  # 最新版のBunを使用
 
       # ステップ8: PrettierでJSONファイルをフォーマットする
       - name: 8. PrettierでJSONをフォーマット
         if: steps.generate_json.outputs.JSON_EXISTS == 'true'
         run: |
-          npm install -g prettier
+          bun add -g prettier
           prettier --write ${{ steps.generate_json.outputs.json_file_path }}
           echo "💅 JSONファイルがPrettierでフォーマットされました。"
 
