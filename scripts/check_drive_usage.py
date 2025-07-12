@@ -11,9 +11,9 @@ import sys
 from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
-from google.auth import default
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
+from google.auth import default  # type: ignore[import-untyped]
+from googleapiclient.discovery import build  # type: ignore[import-untyped]
+from googleapiclient.errors import HttpError  # type: ignore[import-untyped]
 
 if TYPE_CHECKING:
     from googleapiclient.discovery import Resource
@@ -22,10 +22,10 @@ if TYPE_CHECKING:
 def initialize_drive_service() -> Resource:
     """Google Drive APIサービスを初期化する"""
     try:
-        credentials, project = default(scopes=["https://www.googleapis.com/auth/drive"])
-        service = build("drive", "v3", credentials=credentials)
+        credentials, project = default(scopes=["https://www.googleapis.com/auth/drive"])  # type: ignore[misc]
+        service = build("drive", "v3", credentials=credentials)  # type: ignore[arg-type]
         print("[成功] Google Drive APIサービスが初期化されました")
-        return service
+        return service  # type: ignore[return-value]
     except (ValueError, OSError, HttpError) as e:
         print(f"[エラー] APIサービスの初期化に失敗: {e}")
         sys.exit(1)
@@ -34,14 +34,14 @@ def initialize_drive_service() -> Resource:
 def get_drive_usage_info(service: Resource) -> dict[str, Any]:
     """ドライブの使用量情報を取得する"""
     try:
-        about = service.about().get(fields="storageQuota,user").execute()
-        storage_quota = about.get("storageQuota", {})
-        user_info = about.get("user", {})
+        about = service.about().get(fields="storageQuota,user").execute()  # type: ignore[attr-defined]
+        storage_quota = about.get("storageQuota", {})  # type: ignore[attr-defined]
+        user_info = about.get("user", {})  # type: ignore[attr-defined]
 
         return {
-            "total": int(storage_quota.get("limit", 0)),
-            "used": int(storage_quota.get("usage", 0)),
-            "user_email": user_info.get("emailAddress", "Unknown"),
+            "total": int(storage_quota.get("limit", 0)),  # type: ignore[arg-type]
+            "used": int(storage_quota.get("usage", 0)),  # type: ignore[arg-type]
+            "user_email": user_info.get("emailAddress", "Unknown"),  # type: ignore[attr-defined]
         }
     except HttpError as e:
         print(f"[エラー] ストレージ情報の取得に失敗: {e}")
@@ -58,8 +58,8 @@ def list_all_files(service: Resource) -> list[dict[str, Any]]:
     while True:
         try:
             # ファイル一覧を取得(詳細情報付き)
-            results = (
-                service.files()
+            results = (  # type: ignore[misc]
+                service.files()  # type: ignore[attr-defined]
                 .list(
                     pageSize=1000,
                     fields=(
@@ -71,11 +71,11 @@ def list_all_files(service: Resource) -> list[dict[str, Any]]:
                 .execute()
             )
 
-            batch_files = results.get("files", [])
-            files.extend(batch_files)
-            print(f"[情報] {len(batch_files)}件のファイルを取得")
+            batch_files = results.get("files", [])  # type: ignore[attr-defined]
+            files.extend(batch_files)  # type: ignore[arg-type]
+            print(f"[情報] {len(batch_files)}件のファイルを取得")  # type: ignore[arg-type]
 
-            page_token = results.get("nextPageToken")
+            page_token = results.get("nextPageToken")  # type: ignore[attr-defined]
             if not page_token:
                 break
 
@@ -83,8 +83,8 @@ def list_all_files(service: Resource) -> list[dict[str, Any]]:
             print(f"[エラー] ファイル一覧の取得に失敗: {e}")
             break
 
-    print(f"[成功] 合計{len(files)}件のファイルを取得しました")
-    return files
+    print(f"[成功] 合計{len(files)}件のファイルを取得しました")  # type: ignore[arg-type]
+    return files  # type: ignore[return-value]
 
 
 def analyze_files(files: list[dict[str, Any]]) -> dict[str, Any]:
@@ -112,7 +112,7 @@ def analyze_files(files: list[dict[str, Any]]) -> dict[str, Any]:
 
             # 古いファイル(30日以上前)
             if created_time < thirty_days_ago:
-                old_files.append({
+                old_files.append({  # type: ignore[arg-type]
                     "name": name,
                     "size": size,
                     "created": created_time_str,
@@ -126,7 +126,7 @@ def analyze_files(files: list[dict[str, Any]]) -> dict[str, Any]:
             or name.startswith("imas_music_db")
             or "temp" in name.lower()
         ):
-            temp_files.append({
+            temp_files.append({  # type: ignore[arg-type]
                 "name": name,
                 "size": size,
                 "created": file.get("createdTime", ""),
@@ -135,7 +135,7 @@ def analyze_files(files: list[dict[str, Any]]) -> dict[str, Any]:
 
         # 大きなファイル(10MB以上)
         if size > 10 * 1024 * 1024:
-            large_files.append({
+            large_files.append({  # type: ignore[arg-type]
                 "name": name,
                 "size": size,
                 "size_mb": round(size / 1024 / 1024, 2),
