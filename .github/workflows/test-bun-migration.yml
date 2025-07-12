@@ -1,0 +1,91 @@
+---
+# Bun移行テスト専用ワークフロー
+name: Bun移行テスト
+
+# 手動実行のみ
+on:
+  workflow_dispatch: null
+
+jobs:
+  test-bun-migration:
+    runs-on: ubuntu-latest
+    name: Bun移行動作テスト
+    # セキュリティのためGITHUB_TOKENの権限を最小限に制限
+    permissions:
+      contents: read
+    steps:
+      # ステップ1: リポジトリをチェックアウト
+      - name: 1. リポジトリをチェックアウト
+        uses: actions/checkout@v4
+
+      # ステップ2: テスト用ダミーJSONファイルを作成
+      - name: 2. テスト用ダミーJSONファイルを作成
+        run: |
+          echo '{
+            "songs": [
+              {"id": 1, "title": "テストソング1", "artist": "テストアーティスト1"},
+              {"id": 2, "title": "テストソング2", "artist": "テストアーティスト2"}
+            ],
+            "metadata": {
+              "generated_at": "2025-07-11T23:55:00Z",
+              "total_count": 2
+            }
+          }' > test_data.json
+          echo "✅ テスト用JSONファイルが作成されました"
+          cat test_data.json
+
+      # ステップ3: Bun環境のセットアップ
+      - name: 3. Bun環境のセットアップ
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 'latest'
+
+      # ステップ4: Bunのバージョン確認
+      - name: 4. Bunバージョン確認
+        run: |
+          echo "=== Bun情報 ==="
+          bun --version
+          which bun
+          echo "✅ Bunが正常にインストールされました"
+
+      # ステップ5: Prettierをインストール
+      - name: 5. PrettierをBunでインストール
+        run: |
+          echo "=== Prettierインストール開始 ==="
+          bun add -g prettier
+          echo "✅ Prettierがインストールされました"
+
+      # ステップ6: Prettierのバージョン確認
+      - name: 6. Prettierバージョン確認
+        run: |
+          echo "=== Prettier情報 ==="
+          prettier --version
+          which prettier
+          echo "✅ Prettierが正常に動作しています"
+
+      # ステップ7: PrettierでJSONをフォーマット
+      - name: 7. PrettierでJSONをフォーマット
+        run: |
+          echo "=== フォーマット前のJSONファイル ==="
+          cat test_data.json
+          echo ""
+          echo "=== Prettierによるフォーマット実行 ==="
+          prettier --write test_data.json
+          echo "=== フォーマット後のJSONファイル ==="
+          cat test_data.json
+          echo "✅ JSONファイルがPrettierでフォーマットされました"
+
+      # ステップ8: テスト結果の総括
+      - name: 8. テスト結果総括
+        run: |-
+          echo "🎉 === Bun移行テスト完了 ==="
+          echo "✅ setup-bun@v2: 正常動作"
+          echo "✅ bun add -g prettier: 正常動作"
+          echo "✅ Prettierフォーマット: 正常動作"
+          echo ""
+          echo "📋 テスト環境情報:"
+          echo "- OS: $(uname -a)"
+          echo "- Bun: $(bun --version)"
+          echo "- Prettier: $(prettier --version)"
+          echo ""
+          echo "✅ Node.js → Bun移行は正常に動作することが確認されました"
