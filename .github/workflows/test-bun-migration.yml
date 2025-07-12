@@ -10,6 +10,9 @@ jobs:
   test-bun-migration:
     runs-on: ubuntu-latest
     name: Bun移行動作テスト
+    # セキュリティのためGITHUB_TOKENの権限を最小限に制限
+    permissions:
+      contents: read
     steps:
       # ステップ1: リポジトリをチェックアウト
       - name: 1. リポジトリをチェックアウト
