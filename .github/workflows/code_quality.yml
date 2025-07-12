@@ -287,43 +287,44 @@ jobs:
           # 簡潔なサマリーレポートを作成（詳細はGitHub Actions UIで確認）
           cat > combined_report.md << 'EOF'
           # 🔍 コード品質チェック結果サマリー
-          
           EOF
-          
+
           # 各チェックの結果をサマリー形式で統合
           echo "## 📊 チェック結果一覧" >> combined_report.md
           echo "" >> combined_report.md
-          
+
           # Shell Check結果
           if [ "${{ steps.shell_check.outputs.SHELL_LINT_STATUS }}" = "0" ] && \
-             [ "${{ steps.shell_check.outputs.SHELL_FORMAT_STATUS }}" = "0" ]; then
+             [ "${{ steps.shell_check.outputs.SHELL_FORMAT_STATUS }}" = \
+             "0" ]; then
             echo "✅ **シェルスクリプト**: 問題なし" >> combined_report.md
           else
             echo "❌ **シェルスクリプト**: エラーあり" >> combined_report.md
           fi
-          
+
           # YAML Check結果
           if [ "${{ steps.yaml_check.outputs.YAML_LINT_STATUS }}" = "0" ]; then
             echo "✅ **YAML**: 問題なし" >> combined_report.md
           else
             echo "❌ **YAML**: エラーあり" >> combined_report.md
           fi
-          
+
           # Ruff Check結果
           if [ "${{ steps.ruff_check.outputs.LINT_STATUS }}" = "0" ] && \
-             [ "${{ steps.ruff_check.outputs.FORMAT_STATUS }}" = "0" ]; then
+             [ "${{ steps.ruff_check.outputs.FORMAT_STATUS }}" = \
+             "0" ]; then
             echo "✅ **Python (Ruff)**: 問題なし" >> combined_report.md
           else
             echo "❌ **Python (Ruff)**: エラーあり" >> combined_report.md
           fi
-          
+
           # Pyright Check結果
-          if [ "${{ steps.pyright_check.outputs.TYPE_CHECK_STATUS }}" = "0" ]; then
+          if [ "${{ steps.pyright_check.outputs.TYPE_CHECK_STATUS }}" = \
+             "0" ]; then
             echo "✅ **型チェック (Pyright)**: 問題なし" >> combined_report.md
           else
             echo "❌ **型チェック (Pyright)**: エラーあり" >> combined_report.md
           fi
-          
           echo "" >> combined_report.md
           echo "## 🔧 修正方法" >> combined_report.md
           echo "" >> combined_report.md
@@ -331,18 +332,23 @@ jobs:
           echo "" >> combined_report.md
           echo "\`\`\`bash" >> combined_report.md
           echo "# Python (Ruff)" >> combined_report.md
-          echo "uv run ruff check --fix --config config/ruff.toml" >> combined_report.md
-          echo "uv run ruff format --config config/ruff.toml" >> combined_report.md
+          echo "uv run ruff check --fix --config config/ruff.toml" \
+            >> combined_report.md
+          echo "uv run ruff format --config config/ruff.toml" \
+            >> combined_report.md
           echo "" >> combined_report.md
           echo "# YAML" >> combined_report.md
           echo "uv run yamlfix -c config/yamlfix.toml ." >> combined_report.md
           echo "" >> combined_report.md
           echo "# Shell" >> combined_report.md
-          echo "uv run shfmt -i 2 -p -s -ci -sr -fn -w ./*.sh scripts/*.sh" >> combined_report.md
+          echo "uv run shfmt -i 2 -p -s -ci -sr -fn -w ./*.sh scripts/*.sh" \
+            >> combined_report.md
           echo "\`\`\`" >> combined_report.md
           echo "" >> combined_report.md
-          echo "📝 **詳細なエラー内容**: [GitHub Actions UI](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) で確認してください。" >> combined_report.md
-          
+          echo "📝 **詳細なエラー内容**: " \
+            "[GitHub Actions UI](https://github.com/${{ github.repository }}" \
+            "/actions/runs/${{ github.run_id }})で確認してください。" \
+            >> combined_report.md
           echo "📊 最終レポートサイズ: $(wc -c < combined_report.md) bytes"
 
       # ステップ9: PRにコメントを投稿
