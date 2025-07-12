@@ -86,7 +86,7 @@ case "${1:-help}" in
     ;;
   "type-check")
     echo "🔍 Pyrightによる型チェックを実行中..."
-    uv run pyright
+    uv run pyright -p config/pyrightconfig.json
     echo "✅ 型チェックが完了しました"
     ;;
   "test")
@@ -94,7 +94,7 @@ case "${1:-help}" in
     echo "--- Pythonリンティング ---"
     uv run ruff check --config config/ruff.toml
     echo "--- Python型チェック ---"
-    uv run pyright
+    uv run pyright -p config/pyrightconfig.json
     echo "--- YAMLリンティング ---"
     uv run yamllint -c config/yamllint.yml .
     echo "--- シェルスクリプトリンティング ---"
