@@ -311,8 +311,7 @@ jobs:
 
           # Ruff Check結果
           if [ "${{ steps.ruff_check.outputs.LINT_STATUS }}" = "0" ] && \
-             [ "${{ steps.ruff_check.outputs.FORMAT_STATUS }}" = \
-             "0" ]; then
+             [ "${{ steps.ruff_check.outputs.FORMAT_STATUS }}" = "0" ]; then
             echo "✅ **Python (Ruff)**: 問題なし" >> combined_report.md
           else
             echo "❌ **Python (Ruff)**: エラーあり" >> combined_report.md
