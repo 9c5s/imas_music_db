@@ -252,7 +252,8 @@ jobs:
 
           # 型チェック
           echo "### 型チェック結果" >> pyright_report.md
-          if uv run pyright > pyright_output.txt 2>&1; then
+          if uv run pyright -p config/pyrightconfig.json \
+            > pyright_output.txt 2>&1; then
             echo "✅ 型チェック: エラーなし" >> pyright_report.md
             TYPE_CHECK_STATUS=0
           else
@@ -270,7 +271,8 @@ jobs:
             echo "以下のコマンドをローカルで実行してチェックしてください：" >> pyright_report.md
             echo '```bash' >> pyright_report.md
             echo "# 型チェック実行" >> pyright_report.md
-            echo "uv run pyright" >> pyright_report.md
+            echo "uv run pyright -p config/pyrightconfig.json" \
+              >> pyright_report.md
             echo '```' >> pyright_report.md
             echo "" >> pyright_report.md
             echo "型エラーは手動で修正する必要があります。" >> pyright_report.md
@@ -295,8 +297,8 @@ jobs:
 
           # Shell Check結果
           if [ "${{ steps.shell_check.outputs.SHELL_LINT_STATUS }}" = "0" ] && \
-             [ "${{ steps.shell_check.outputs.SHELL_FORMAT_STATUS }}" = \
-             "0" ]; then
+             [ "${{ steps.shell_check.outputs.SHELL_FORMAT_STATUS }}" \
+               = "0" ]; then
             echo "✅ **シェルスクリプト**: 問題なし" >> combined_report.md
           else
             echo "❌ **シェルスクリプト**: エラーあり" >> combined_report.md
@@ -319,8 +321,8 @@ jobs:
           fi
 
           # Pyright Check結果
-          if [ "${{ steps.pyright_check.outputs.TYPE_CHECK_STATUS }}" = \
-             "0" ]; then
+          if [ "${{ steps.pyright_check.outputs.TYPE_CHECK_STATUS }}" \
+               = "0" ]; then
             echo "✅ **型チェック (Pyright)**: 問題なし" >> combined_report.md
           else
             echo "❌ **型チェック (Pyright)**: エラーあり" >> combined_report.md
