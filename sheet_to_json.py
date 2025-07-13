@@ -1,21 +1,17 @@
-"""Googleスプレッドシートをコピーし、指定のシートからデータを取得・整形する
+"""Googleスプレッドシートから直接データを取得・整形する
 
 このスクリプトは以下の手順を自動で実行する:
-1. Google Drive APIを使用し、指定されたスプレッドシートを
-   ユーザーのドライブにコピーする。
-2. Google Sheets APIを使用し、コピーされたシートからデータを読み取る。
-3. 読み取ったデータを設定に基づいて処理・整形し、IDの降順でソートする。
-4. 処理後のデータをJSONファイルとして保存する。
-5. 処理完了後、コピーされた一時的なスプレッドシートをドライブから完全に削除する。
+1. Google Sheets APIを使用し、指定されたスプレッドシートから直接データを読み取る。
+2. 読み取ったデータを設定に基づいて処理・整形し、IDの降順でソートする。
+3. 処理後のデータをJSONファイルとして保存する。
 """
 
 from __future__ import annotations
 
 import json
 import re
-import uuid
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, NotRequired, Self, TypedDict, cast
+from typing import TYPE_CHECKING, Any, NotRequired, TypedDict, cast
 
 import google.auth
 import yaml
@@ -24,11 +20,6 @@ from googleapiclient.discovery import build  # type: ignore[import]
 from googleapiclient.errors import HttpError
 
 if TYPE_CHECKING:
-    from types import TracebackType
-
-    from googleapiclient._apis.drive.v3.resources import (  # type: ignore[import]
-        DriveResource,
-    )
     from googleapiclient._apis.sheets.v4.resources import (  # type: ignore[import]
         SheetsResource,
     )
@@ -129,8 +120,7 @@ def load_config(config_path: str = "config/sheet_config.yml") -> Config:
 
 # --- Google API スコープ ---
 SCOPES: list[str] = [
-    "https://www.googleapis.com/auth/drive",
-    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/spreadsheets.readonly",
 ]
 
 # --- 正規表現 ---
@@ -149,11 +139,10 @@ def _col_to_index(col: str) -> int:
 
 
 class GoogleApiService:
-    """Google DriveとSheets APIのサービスを管理するクラス"""
+    """Google Sheets APIのサービスを管理するクラス"""
 
     def __init__(self) -> None:
         """GoogleApiServiceを初期化する"""
-        self.drive: DriveResource | None = None
         self.sheets: SheetsResource | None = None
 
     def initialize(self) -> bool:
@@ -161,10 +150,6 @@ class GoogleApiService:
         print("[情報] Google APIサービスの初期化を開始します...")
         try:
             creds, _ = google.auth.default(scopes=SCOPES)  # type: ignore[misc]
-            self.drive = cast(
-                "DriveResource",
-                build("drive", "v3", credentials=creds),  # type: ignore[arg-type]
-            )
             self.sheets = cast(
                 "SheetsResource",
                 build("sheets", "v4", credentials=creds),  # type: ignore[arg-type]
@@ -295,59 +280,6 @@ class SheetProcessor:
             return 0
 
 
-class SheetCopier:
-    """スプレッドシートのコピーと削除を管理するコンテキストマネージャ"""
-
-    def __init__(self, drive_service: DriveResource, source_id: str) -> None:
-        """SheetCopierを初期化する"""
-        self._drive_service = drive_service
-        self._source_id = source_id
-        self.copied_file_id: str | None = None
-
-    def __enter__(self) -> Self:
-        """コンテキストに入り、スプレッドシートをコピーする"""
-        print(
-            f"\n[情報] スプレッドシート (ID: {self._source_id}) のコピーを"
-            "開始します...",
-        )
-        copy_title = f"tmp_copy_{uuid.uuid4().hex}"
-        body = {"name": copy_title}
-        try:
-            response = (
-                self._drive_service.files()  # type: ignore[attr-defined]
-                .copy(fileId=self._source_id, body=body, fields="id")  # type: ignore[arg-type]
-                .execute()
-            )
-            self.copied_file_id = response.get("id")
-            if self.copied_file_id:
-                print(
-                    f"[成功] スプレッドシートをコピーしました。"
-                    f"新しいID: {self.copied_file_id}",
-                )
-                return self
-
-            error_message = "コピー後のファイルIDが取得できませんでした。"
-            raise ValueError(error_message)
-        except HttpError as e:
-            print(f"[エラー] スプレッドシートのコピーに失敗しました: {e}")
-            raise
-
-    def __exit__(
-        self,
-        _exc_type: type[BaseException] | None,
-        _exc_val: BaseException | None,
-        _exc_tb: TracebackType | None,
-    ) -> None:
-        """コンテキストを抜け、一時ファイルを削除する"""
-        if self.copied_file_id:
-            print(f"\n[情報] 一時ファイル (ID: {self.copied_file_id}) を削除します...")
-            try:
-                self._drive_service.files().delete(fileId=self.copied_file_id).execute()
-                print("[成功] 一時ファイルを削除しました。")
-            except HttpError as e:
-                print(f"[エラー] 一時ファイルの削除に失敗しました: {e}")
-
-
 def load_and_validate_config() -> Config | None:
     """設定ファイルの読み込みと検証を行う"""
     try:
@@ -363,30 +295,27 @@ def load_and_validate_config() -> Config | None:
 def initialize_api_services() -> GoogleApiService | None:
     """Google APIサービスの初期化を行う"""
     api_services = GoogleApiService()
-    if (
-        not api_services.initialize()
-        or not api_services.drive
-        or not api_services.sheets
-    ):
+    if not api_services.initialize() or not api_services.sheets:
         return None
     return api_services
 
 
 def fetch_sheet_data(
-    api_services: GoogleApiService, config: Config, copier: SheetCopier
+    api_services: GoogleApiService, config: Config
 ) -> list[list[str]] | None:
-    """スプレッドシートからデータを取得する"""
-    if not copier.copied_file_id:
-        return None
-
+    """スプレッドシートからデータを取得する(直接読み取り)"""
+    spreadsheet_id = config["source_spreadsheet_id"]
     sheet_name = config["target_sheet_name"]
-    print(f"\n[情報] シート '{sheet_name}' からデータを取得します...")
+    print(
+        f"\n[情報] スプレッドシート (ID: {spreadsheet_id}) の"
+        f"シート '{sheet_name}' からデータを直接取得します...",
+    )
     try:
         result = (
             api_services.sheets.spreadsheets()  # type: ignore[attr-defined]
             .values()
             .get(
-                spreadsheetId=copier.copied_file_id,
+                spreadsheetId=spreadsheet_id,
                 range=f"'{sheet_name}'",
                 valueRenderOption="FORMATTED_VALUE",
             )
@@ -435,17 +364,15 @@ def main() -> None:
     if not api_services:
         return
 
-    # 型チェッカー向け: api_servicesがNoneでない場合、driveとsheetsもNoneではない
-    assert api_services.drive is not None  # noqa: S101
+    # 型チェッカー向け: api_servicesがNoneでない場合、sheetsもNoneではない
     assert api_services.sheets is not None  # noqa: S101
 
     try:
-        with SheetCopier(api_services.drive, config["source_spreadsheet_id"]) as copier:
-            sheet_data = fetch_sheet_data(api_services, config, copier)
-            if not sheet_data:
-                return
+        sheet_data = fetch_sheet_data(api_services, config)
+        if not sheet_data:
+            return
 
-            process_and_save_data(config, sheet_data)
+        process_and_save_data(config, sheet_data)
 
     except (OSError, HttpError, ValueError) as e:
         print(f"\n[エラー] メイン処理で予期せぬエラーが発生しました: {e}")
