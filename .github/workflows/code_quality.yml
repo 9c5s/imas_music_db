@@ -218,12 +218,12 @@ jobs:
             echo '```bash' >> ruff_report.md
             if [ $LINT_STATUS -ne 0 ]; then
               echo "# リンティングエラーの自動修正" >> ruff_report.md
-              echo "uv run ruff check --fix \\" >> ruff_report.md
+              echo "uv run ruff check --fix \" >> ruff_report.md
               echo "  --config config/ruff.toml" >> ruff_report.md
             fi
             if [ $FORMAT_STATUS -ne 0 ]; then
               echo "# フォーマットの自動修正" >> ruff_report.md
-              echo "uv run ruff format \\" >> ruff_report.md
+              echo "uv run ruff format \" >> ruff_report.md
               echo "  --config config/ruff.toml" >> ruff_report.md
             fi
             echo '```' >> ruff_report.md
@@ -252,7 +252,8 @@ jobs:
 
           # 型チェック
           echo "### 型チェック結果" >> pyright_report.md
-          if uv run pyright > pyright_output.txt 2>&1; then
+          if uv run pyright -p config/pyrightconfig.json \
+            > pyright_output.txt 2>&1; then
             echo "✅ 型チェック: エラーなし" >> pyright_report.md
             TYPE_CHECK_STATUS=0
           else
@@ -267,10 +268,11 @@ jobs:
           # 修正方法
           if [ $TYPE_CHECK_STATUS -ne 0 ]; then
             echo "### 💡 型エラー修正方法" >> pyright_report.md
-            echo "以下のコマンドをローカルで実行してチェックしてください：" >> pyright_report.md
+            echo "以下のコマンドをローカルで実行してください：" >> pyright_report.md
             echo '```bash' >> pyright_report.md
             echo "# 型チェック実行" >> pyright_report.md
-            echo "uv run pyright" >> pyright_report.md
+            echo "uv run pyright -p config/pyrightconfig.json" \
+              >> pyright_report.md
             echo '```' >> pyright_report.md
             echo "" >> pyright_report.md
             echo "型エラーは手動で修正する必要があります。" >> pyright_report.md
@@ -295,8 +297,8 @@ jobs:
 
           # Shell Check結果
           if [ "${{ steps.shell_check.outputs.SHELL_LINT_STATUS }}" = "0" ] && \
-             [ "${{ steps.shell_check.outputs.SHELL_FORMAT_STATUS }}" = \
-             "0" ]; then
+             [ "${{ steps.shell_check.outputs.SHELL_FORMAT_STATUS }}" \
+               = "0" ]; then
             echo "✅ **シェルスクリプト**: 問題なし" >> combined_report.md
           else
             echo "❌ **シェルスクリプト**: エラーあり" >> combined_report.md
@@ -311,16 +313,15 @@ jobs:
 
           # Ruff Check結果
           if [ "${{ steps.ruff_check.outputs.LINT_STATUS }}" = "0" ] && \
-             [ "${{ steps.ruff_check.outputs.FORMAT_STATUS }}" = \
-             "0" ]; then
+             [ "${{ steps.ruff_check.outputs.FORMAT_STATUS }}" = "0" ]; then
             echo "✅ **Python (Ruff)**: 問題なし" >> combined_report.md
           else
             echo "❌ **Python (Ruff)**: エラーあり" >> combined_report.md
           fi
 
           # Pyright Check結果
-          if [ "${{ steps.pyright_check.outputs.TYPE_CHECK_STATUS }}" = \
-             "0" ]; then
+          if [ "${{ steps.pyright_check.outputs.TYPE_CHECK_STATUS }}" \
+               = "0" ]; then
             echo "✅ **型チェック (Pyright)**: 問題なし" >> combined_report.md
           else
             echo "❌ **型チェック (Pyright)**: エラーあり" >> combined_report.md
@@ -330,7 +331,7 @@ jobs:
           echo "" >> combined_report.md
           echo "エラーがある場合は、以下のコマンドをローカルで実行してください：" >> combined_report.md
           echo "" >> combined_report.md
-          echo "\`\`\`bash" >> combined_report.md
+          echo "```bash" >> combined_report.md
           echo "# Python (Ruff)" >> combined_report.md
           echo "uv run ruff check --fix --config config/ruff.toml" \
             >> combined_report.md
@@ -343,7 +344,7 @@ jobs:
           echo "# Shell" >> combined_report.md
           echo "uv run shfmt -i 2 -p -s -ci -sr -fn -w ./*.sh scripts/*.sh" \
             >> combined_report.md
-          echo "\`\`\`" >> combined_report.md
+          echo "```" >> combined_report.md
           echo "" >> combined_report.md
           echo "📝 **詳細なエラー内容**: " \
             "[GitHub Actions UI](https://github.com/${{ github.repository }}" \
@@ -390,7 +391,7 @@ jobs:
           echo "=== Pyright GitHub形式出力 ==="
           if find . -name "*.py" -not -path "./node_modules/*" | \
               grep -q .; then
-            uv run pyright 2>&1 || true
+            uv run pyright -p config/pyrightconfig.json 2>&1 || true
           else
             echo "対象ファイルなし: Pythonファイルが見つかりません"
           fi

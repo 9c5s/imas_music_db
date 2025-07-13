@@ -1,0 +1,90 @@
+{
+  // ===============================================================================
+  // Pyright設定 - 純粋なstrictモード
+  // 日本語コメント・コーディング対応版
+  // 
+  // strictモードのみを使用してPyrightのデフォルト厳格設定を完全適用
+  // 個別診断設定は一切行わず、Pyrightの推奨設定に完全委任
+  // ===============================================================================
+
+  // Pythonバージョンの指定
+  // このプロジェクトはPython 3.12を使用
+  "pythonVersion": "3.12",
+
+  // Pythonプラットフォームの指定（Darwin: macOS, Linux, Windows）
+  "pythonPlatform": "Linux",
+
+  // 分析対象のルートディレクトリ
+  // config/ディレクトリからプロジェクトルートを指定
+  "include": [
+    ".."
+  ],
+
+  // 分析対象から除外するディレクトリ・ファイル
+  // Ruffと同様の除外設定を適用
+  "exclude": [
+    ".bzr",
+    ".direnv", 
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    "../.venv",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "venv",
+    ".vscode",
+    ".idea",
+    "*.egg-info",
+    "../scripts/cleanup_drive_storage.py"
+  ],
+
+
+  // 仮想環境のパス
+  // config/ディレクトリからuvの仮想環境を指定
+  "venvPath": "../.venv",
+
+  // 型チェックモード - 最も厳格な設定
+  // "strict": Pyrightが推奨する全ての厳格ルールを自動適用
+  // 
+  // strictモードで自動的にerrorレベルに設定される主要診断：
+  // - reportUnknownVariableType: 型推論できない変数
+  // - reportUnknownMemberType: 型推論できないメンバー
+  // - reportUnknownParameterType: 型推論できない引数
+  // - reportUnknownArgumentType: 型推論できない実引数
+  // - reportMissingParameterType: 引数の型注釈不足
+  // - reportMissingReturnType: 戻り値の型注釈不足
+  // - reportMissingTypeArgument: ジェネリック型の型引数不足
+  // - reportUnusedImport: 未使用インポート
+  // - reportUnusedVariable: 未使用変数
+  // - reportUnusedClass: 未使用クラス
+  // - reportUnusedFunction: 未使用関数
+  // - その他40以上の厳格な型安全性チェック
+  "typeCheckingMode": "strict",
+
+  // 自動補完を有効にするか
+  "autoImportCompletions": true,
+
+  // 分析の詳細度を表示するか
+  "verboseOutput": false,
+
+  // 実行環境の設定
+  "executionEnvironments": [
+    {
+      "root": "..",
+      "pythonVersion": "3.12",
+      "pythonPlatform": "Linux"
+    }
+  ]
+}
