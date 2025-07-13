@@ -56,7 +56,6 @@ jobs:
         run: |
           echo "🧹 Google Driveクリーンアップスクリプトの動作確認を開始します..."
           echo "DRY_RUN=${{ github.event.inputs.dry_run }}" >> $GITHUB_OUTPUT
-          
           if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
             echo "📋 ドライランモード: 実際の削除は行いません"
             echo "スクリプトの実行確認のみを行います"
@@ -73,7 +72,11 @@ jobs:
         run: |
           echo "📊 Driveクリーンアップテスト完了"
           echo "=========================================="
-          echo "実行モード: ${{ github.event.inputs.dry_run == 'true' && 'ドライラン' || '実際のクリーンアップ' }}"
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            echo "実行モード: ドライラン"
+          else
+            echo "実行モード: 実際のクリーンアップ"
+          fi
           echo "実行時刻: $(date '+%Y-%m-%d %H:%M:%S UTC')"
           echo "スクリプトパス: scripts/cleanup_drive_storage.py"
           echo "=========================================="
@@ -84,7 +87,7 @@ jobs:
       # ステップ7: 失敗時の情報提供
       - name: 7. エラー情報（失敗時のみ）
         if: failure()
-        run: |
+        run: |-
           echo "❌ cleanup_drive_storage.pyの実行でエラーが発生しました"
           echo ""
           echo "考えられる原因:"
@@ -96,3 +99,4 @@ jobs:
           echo "1. GitHub Secretsの設定を確認"
           echo "2. Google Cloud APIの有効化を確認"
           echo "3. スクリプトのログを詳細に確認"
+
