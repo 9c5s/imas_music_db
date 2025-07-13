@@ -46,7 +46,8 @@
     "venv",
     ".vscode",
     ".idea",
-    "*.egg-info"
+    "*.egg-info",
+    "../scripts/cleanup_drive_storage.py"
   ],
 
 
