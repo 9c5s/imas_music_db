@@ -56,8 +56,18 @@ jobs:
         run: |
           uv sync --no-dev
 
-        # ステップ6: Pythonスクリプトを実行してJSONファイルを生成する
-      - name: 6. Pythonスクリプトを実行してJSONを生成
+      # ステップ6: Google Driveクリーンアップを実行してストレージ容量を確保
+      - name: 6. Google Driveクリーンアップ実行
+        id: cleanup_drive
+        working-directory: ./main_repo
+        run: |
+          echo "🧹 Google Driveクリーンアップを実行してストレージ容量を確保します..."
+          uv run python scripts/cleanup_drive_storage.py
+          echo "✅ Driveクリーンアップが完了しました。"
+        continue-on-error: false
+
+        # ステップ7: Pythonスクリプトを実行してJSONファイルを生成する
+      - name: 7. Pythonスクリプトを実行してJSONを生成
         id: generate_json
         working-directory: ./main_repo
         run: |
@@ -72,31 +82,31 @@ jobs:
             exit 1
           fi
 
-      # ステップ7: Bun環境をセットアップする
-      - name: 7. Bun環境のセットアップ
+      # ステップ8: Bun環境をセットアップする
+      - name: 8. Bun環境のセットアップ
         if: steps.generate_json.outputs.JSON_EXISTS == 'true'
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: 'latest'  # 最新版のBunを使用
 
-      # ステップ8: PrettierでJSONファイルをフォーマットする
-      - name: 8. PrettierでJSONをフォーマット
+      # ステップ9: PrettierでJSONファイルをフォーマットする
+      - name: 9. PrettierでJSONをフォーマット
         if: steps.generate_json.outputs.JSON_EXISTS == 'true'
         run: |
           bun add -g prettier
           prettier --write ${{ steps.generate_json.outputs.json_file_path }}
           echo "💅 JSONファイルがPrettierでフォーマットされました。"
 
-      # ステップ9: 生成されたデータをコミットするブランチ(data)をチェックアウトする
-      - name: 9. データコミット用リポジトリをチェックアウト (data)
+      # ステップ10: 生成されたデータをコミットするブランチ(data)をチェックアウトする
+      - name: 10. データコミット用リポジトリをチェックアウト (data)
         if: steps.generate_json.outputs.JSON_EXISTS == 'true'
         uses: actions/checkout@v4
         with:
           ref: data
           path: data_repo
 
-      # ステップ10: データの差分があればコミットしてプッシュする
-      - name: 10. 差分をコミットしてプッシュ
+      # ステップ11: データの差分があればコミットしてプッシュする
+      - name: 11. 差分をコミットしてプッシュ
         if: steps.generate_json.outputs.JSON_EXISTS == 'true'
         id: commit_push
         run: |
@@ -133,8 +143,8 @@ jobs:
             echo "✅ imas_music_db.json に変更はありません。"
           fi
 
-      # ステップ11: 新しいデータでリリースを作成する
-      - name: 11. リリースを作成
+      # ステップ12: 新しいデータでリリースを作成する
+      - name: 12. リリースを作成
         if: steps.commit_push.outputs.committed == 'true'
         id: create_release
         uses: actions/create-release@v1
@@ -150,8 +160,8 @@ jobs:
           # dataブランチの最新コミットからリリースを作成
           commitish: data
 
-      # ステップ12: 生成されたJSONファイルをリリースに添付する
-      - name: 12. リリースアセットをアップロード
+      # ステップ13: 生成されたJSONファイルをリリースに添付する
+      - name: 13. リリースアセットをアップロード
         if: steps.commit_push.outputs.committed == 'true'
         uses: actions/upload-release-asset@v1
         env:
