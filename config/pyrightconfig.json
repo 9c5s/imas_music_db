@@ -1,5 +1,5 @@
 {
-  "include": ["."],
+  "include": [".."],
   "exclude": [".git", ".mypy_cache", ".ruff_cache", "../.venv"],
   "venvPath": "../.venv",
   "typeCheckingMode": "strict"
