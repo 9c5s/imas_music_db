@@ -133,31 +133,19 @@ jobs:
             echo "✅ imas_music_db.json に変更はありません。"
           fi
 
-      # ステップ11: 新しいデータでリリースを作成する
-      - name: 11. リリースを作成
+      # ステップ11: 新しいデータでリリースを作成してアセットをアップロード
+      - name: 11. リリースを作成してアセットをアップロード
         if: steps.commit_push.outputs.committed == 'true'
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.commit_push.outputs.tag_name }}
-          release_name: データ更新 (${{ steps.commit_push.outputs.tag_name }})
+          name: データ更新 (${{ steps.commit_push.outputs.tag_name }})
           body: |
             スプレッドシートからの自動データ更新です。
           draft: false
           prerelease: false
           # dataブランチの最新コミットからリリースを作成
-          commitish: data
-
-      # ステップ12: 生成されたJSONファイルをリリースに添付する
-      - name: 12. リリースアセットをアップロード
-        if: steps.commit_push.outputs.committed == 'true'
-        uses: actions/upload-release-asset@v1
+          target_commitish: data
+          files: ./data_repo/imas_music_db.json
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./data_repo/imas_music_db.json
-          asset_name: imas_music_db.json
-          asset_content_type: application/json
