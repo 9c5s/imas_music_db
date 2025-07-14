@@ -83,8 +83,7 @@ jobs:
       - name: 8. PrettierでJSONをフォーマット
         if: steps.generate_json.outputs.JSON_EXISTS == 'true'
         run: |
-          bun add -g prettier
-          prettier --write ${{ steps.generate_json.outputs.json_file_path }}
+          bunx prettier --write ${{ steps.generate_json.outputs.json_file_path }}
           echo "💅 JSONファイルがPrettierでフォーマットされました。"
 
       # ステップ9: 生成されたデータをコミットするブランチ(data)をチェックアウトする
