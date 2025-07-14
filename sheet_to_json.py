@@ -126,8 +126,10 @@ SCOPES: list[str] = [
 # --- 正規表現 ---
 # 「歌唱」列の解析用 (例: "ユニット名[メンバー1,メンバー2]")
 SINGER_PATTERN = re.compile(r"(.+?)\[(.+?)\]$")
-# 「歌唱」列の分割用 (", "で分割するが、[]内は無視)
-SINGER_SPLIT_PATTERN = re.compile(r",\s*(?![^[]*\])")
+# 配列フィールド共通の分割用 (", "で分割するが、[]内は無視)
+ARRAY_SPLIT_PATTERN = re.compile(r",\s*(?![^[]*\])")
+# 「歌唱」列の分割用 (互換性のため残存)
+SINGER_SPLIT_PATTERN = ARRAY_SPLIT_PATTERN
 
 
 def _col_to_index(col: str) -> int:
@@ -136,6 +138,22 @@ def _col_to_index(col: str) -> int:
     for char in col.upper():
         index = index * 26 + (ord(char) - ord("A") + 1)
     return index - 1
+
+
+def _safe_split(value: str) -> list[str]:
+    """角括弧内のカンマを無視してカンマ分割を行う
+
+    Args:
+        value: 分割対象の文字列
+
+    Returns:
+        list[str]: 分割後の文字列リスト (空文字は除外)
+
+    Examples:
+        "佐高陵平[Hifumi, inc.]" -> ["佐高陵平[Hifumi, inc.]"]
+        "作者A, 作者B[グループ], 作者C" -> ["作者A", "作者B[グループ]", "作者C"]
+    """
+    return [part.strip() for part in ARRAY_SPLIT_PATTERN.split(value) if part.strip()]
 
 
 class GoogleApiService:
@@ -237,7 +255,8 @@ class SheetProcessor:
                         if v.strip() and v.strip() != "越境"
                     ]
                 else:
-                    new_values = [v.strip() for v in value.split(",") if v.strip()]
+                    # 角括弧内のカンマを考慮した安全な分割
+                    new_values = _safe_split(value)
                 record[key].extend(new_values)
             else:
                 record[key] = value
