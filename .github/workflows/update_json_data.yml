@@ -138,6 +138,7 @@ jobs:
         if: steps.commit_push.outputs.committed == 'true'
         uses: softprops/action-gh-release@v2
         with:
+          token: ${{ secrets.GITHUB_TOKEN }}
           tag_name: ${{ steps.commit_push.outputs.tag_name }}
           name: データ更新 (${{ steps.commit_push.outputs.tag_name }})
           body: |
@@ -147,5 +148,3 @@ jobs:
           # dataブランチの最新コミットからリリースを作成
           target_commitish: data
           files: ./data_repo/imas_music_db.json
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
