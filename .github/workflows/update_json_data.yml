@@ -19,11 +19,11 @@ jobs:
       # Workload Identity連携によるGoogle Cloudへの認証のために必要
       id-token: write
     steps:
-      # ステップ1: スクリプトが格納されているブランチ(master)をチェックアウトする
-      - name: 1. スクリプト用リポジトリをチェックアウト (master)
+      # ステップ1: スクリプトが格納されているブランチ(main)をチェックアウトする
+      - name: 1. スクリプト用リポジトリをチェックアウト (main)
         uses: actions/checkout@v4
         with:
-          ref: master
+          ref: main
           # 'main_repo'というディレクトリにチェックアウトする
           path: main_repo
 
