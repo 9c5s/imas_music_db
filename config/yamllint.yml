@@ -90,6 +90,11 @@ rules:
   new-line-at-end-of-file:
     level: error
 
+  # 改行文字をプラットフォーム適応型に設定（Windows/Unix対応）
+  new-lines:
+    type: platform
+    level: error
+
   # コメントの前のスペースを厳格に要求
   comments:
     min-spaces-from-content: 2

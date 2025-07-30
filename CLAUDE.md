@@ -38,6 +38,9 @@ uv run ruff check --fix --config config/ruff.toml
 
 # フォーマッティング
 uv run ruff format --config config/ruff.toml
+
+# Pyrightによる型チェック
+uv run pyright -p config/pyrightconfig.json
 ```
 
 #### YAMLファイル（厳格ルール）
@@ -115,6 +118,9 @@ uv run python scripts/auto_pr.py
 
 # シェルスクリプト統合チェック
 ./scripts.sh shell-check
+
+# Python型チェック
+./scripts.sh type-check
 ```
 
 #### その他の開発コマンド
@@ -142,6 +148,9 @@ uv run python scripts/fix_workflow_errors.py
 ```bash
 # Google Cloud認証（初回のみ）
 gcloud auth application-default login
+
+# Gitフック自動化セットアップ（推奨）
+uv run lefthook install
 ```
 
 ## プロジェクト構造
@@ -153,16 +162,20 @@ imas_music_db/
 │   ├── yamllint.yml       # YAMLリンター設定
 │   ├── yamlfix.toml       # YAML自動修正設定
 │   ├── .shellcheckrc      # ShellCheckリンター設定
-│   └── .editorconfig      # shfmtフォーマッター設定
+│   ├── .editorconfig      # shfmtフォーマッター設定
+│   ├── pyrightconfig.json # Pyright型チェッカー設定
+│   └── sheet_config.yml   # スプレッドシート設定（外部分離）
 ├── scripts/               # 自動化スクリプト
 │   ├── auto_pr.py         # PR作成・監視自動化
 │   ├── fix_workflow_errors.py # ワークフローエラー自動修正
 │   └── monitor_pr.py      # PR監視
 ├── .github/workflows/     # GitHub Actions
-│   ├── code_quality.yml   # コード品質チェック
-│   └── update_json_data.yml # データ更新自動化
+│   ├── code_quality.yml   # コード品質チェック（型チェック含む）
+│   ├── update_json_data.yml # データ更新自動化
+│   └── claude.yml         # Claude Code連携
 ├── sheet_to_json.py       # メインスクリプト
 ├── scripts.sh             # 開発タスクランナー
+├── lefthook.yml           # Gitフック自動化設定
 ├── pyproject.toml         # プロジェクト設定
 └── README.md
 ```
@@ -170,10 +183,12 @@ imas_music_db/
 ### 設定ファイルの管理
 
 - **config/ディレクトリ**: 全ての品質チェック設定を集約
-  - Python（Ruff）、YAML（yamllint/yamlfix）、シェルスクリプト（ShellCheck/shfmt）
+  - Python（Ruff・Pyright）、YAML（yamllint/yamlfix）、シェルスクリプト（ShellCheck/shfmt）
+  - スプレッドシート設定の外部分離（sheet_config.yml）
 - **統一された実行方法**: `scripts.sh`経由で設定ファイルパスを自動指定
 - **GitHub Actions連携**: CI/CDパイプラインでも同じ設定を使用
-- **3言語統合**: Python・YAML・シェルスクリプトの統一的品質管理
+- **4言語統合**: Python・YAML・シェルスクリプト・型チェックの統一的品質管理
+- **Gitフック自動化**: lefthook.ymlによるコミット前品質チェック
 
 ## システムアーキテクチャ
 
@@ -199,20 +214,25 @@ imas_music_db/
 
 ### データフロー
 
-1. 指定されたスプレッドシート（`CONFIG["source_spreadsheet_id"]`）を一時的にドライブにコピー
-2. 対象シート（`CONFIG["target_sheet_name"]`）からデータを読み取り
-3. 列マッピング設定（`CONFIG["column_mapping"]`）に従ってJSONオブジェクトに変換
+1. YAML設定ファイル（`config/sheet_config.yml`）から設定を読み込み
+2. 指定されたスプレッドシートから直接データを読み取り
+3. 列マッピング設定に従ってJSONオブジェクトに変換
 4. IDフィールドの降順でソート
-5. JSONファイル（`CONFIG["output_filename"]`）として出力
-6. 一時コピーファイルを削除
+5. JSONファイルとして出力
 
 ### 設定
 
-メインの設定は `CONFIG` 辞書（`sheet_to_json.py:55-89`）で管理：
-- `source_spreadsheet_id`: コピー元スプレッドシートID
-- `target_sheet_name`: 読み取り対象シート名
-- `column_mapping`: 列文字とJSONキーのマッピング
-- `ignore_values`: 空文字として扱う値のセット
+メインの設定は `config/sheet_config.yml` で管理される外部設定ファイル：
+- **spreadsheet**: スプレッドシート基本設定
+  - `source_id`: コピー元スプレッドシートID
+  - `target_sheet`: 読み取り対象シート名
+- **output**: 出力設定
+  - `filename`: 出力JSONファイル名
+- **data_structure**: データ構造設定
+  - `data_start_row`: データ開始行番号
+  - `end_check_columns`: データ終端判定列範囲
+- **column_mapping**: 列文字とJSONキーのマッピング（配列処理含む）
+- **ignore_values**: 空文字として扱う値のセット
 
 ## GitHub Actions
 
@@ -236,13 +256,38 @@ imas_music_db/
 プルリクエスト作成時に以下のワークフローが自動実行されます：
 
 **`code_quality.yml`**: 統合コード品質チェック（PRコメント付き）
-- **Pythonファイル**: Ruffリンティング・フォーマットチェック
+- **Pythonファイル**: Ruffリンティング・フォーマットチェック・Pyright型チェック
 - **YAMLファイル**: yamllintチェック
 - **シェルスクリプト**: ShellCheck・shfmtチェック
 - チェック結果をPRにコメントとして投稿
 - 統計情報と修正方法の表示
 - GitHub Actions UI上でのエラー表示
-- 3言語統合による包括的な品質保証
+- 4言語統合による包括的な品質保証（型安全性含む）
+
+**`claude.yml`**: Claude Code連携ワークフロー
+- PRコメント・イシュー・レビューでの@claudeメンション対応
+- Claude Code OAuth連携による自動応答
+- コードレビュー・課題解決の自動化
+
+### Gitフック自動化
+
+**lefthook.yml**による自動品質チェック：
+
+**pre-commit**: コミット前の並列品質チェック
+- **Python**: Ruffリンティング・フォーマット（自動修正）
+- **YAML**: yamllintチェック・yamlfix自動修正
+- **Shell**: ShellCheckリンティング・shfmtフォーマット（自動修正）
+- 修正されたファイルの自動ステージング
+
+**pre-push**: プッシュ前の包括的品質チェック
+- 全ファイル対象の品質チェック
+- Ruff・yamllint・ShellCheckによる最終検証
+
+**セットアップ**: 
+```bash
+# lefthookのインストールと有効化
+uv run lefthook install
+```
 
 ### ブランチ構成・開発フロー
 
