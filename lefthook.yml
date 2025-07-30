@@ -6,7 +6,7 @@ pre-commit:
     # Python品質チェック
     python-lint:
       glob: "*.py"
-      run: uv run ruff check --config config/ruff.toml {staged_files}
+      run: uv run ruff check --fix --config config/ruff.toml {staged_files}
       stage_fixed: true
     python-format:
       glob: "*.py"
