@@ -90,9 +90,9 @@ rules:
   new-line-at-end-of-file:
     level: error
 
-  # 改行文字をプラットフォーム適応型に設定（Windows/Unix対応）
+  # 改行文字をUnix形式（LF）に統一
   new-lines:
-    type: platform
+    type: unix
     level: error
 
   # コメントの前のスペースを厳格に要求
