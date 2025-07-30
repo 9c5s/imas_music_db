@@ -90,6 +90,11 @@ rules:
   new-line-at-end-of-file:
     level: error
 
+  # 改行文字をUnix形式（LF）に統一
+  new-lines:
+    type: unix
+    level: error
+
   # コメントの前のスペースを厳格に要求
   comments:
     min-spaces-from-content: 2

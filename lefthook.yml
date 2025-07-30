@@ -1,0 +1,58 @@
+---
+# Lefthook設定ファイル - Git hookによる自動品質チェック
+pre-commit:
+  parallel: true
+  commands:
+    # Python品質チェック
+    python-lint:
+      glob: "*.py"
+      run: uv run ruff check --fix --config config/ruff.toml {staged_files}
+      stage_fixed: true
+    python-format:
+      glob: "*.py"
+      run: uv run ruff format --config config/ruff.toml {staged_files}
+      stage_fixed: true
+
+    # YAML品質チェック
+    yaml-lint:
+      glob: "*.{yaml,yml}"
+      run: uv run yamllint -c config/yamllint.yml {staged_files}
+    yaml-format:
+      glob: "*.{yaml,yml}"
+      run: uv run yamlfix -c config/yamlfix.toml {staged_files}
+      stage_fixed: true
+
+    # シェルスクリプト品質チェック
+    shell-lint:
+      glob: "*.sh"
+      run: uv run shellcheck --rcfile=config/.shellcheckrc {staged_files}
+    shell-format:
+      glob: "*.sh"
+      run: uv run shfmt -i 2 -p -s -ci -sr -fn -w {staged_files}
+      stage_fixed: true
+
+pre-push:
+  parallel: true
+  commands:
+    # より包括的な品質チェック（全ファイル対象）
+    python-check-all:
+      run: uv run ruff check --config config/ruff.toml .
+    yaml-check-all:
+      run: uv run yamllint -c config/yamllint.yml .
+    shell-check-all:
+      run: |
+        if ls ./*.sh 1> /dev/null 2>&1; then
+          uv run shellcheck --rcfile=config/.shellcheckrc ./*.sh
+        fi
+        if ls scripts/*.sh 1> /dev/null 2>&1; then
+          uv run shellcheck --rcfile=config/.shellcheckrc scripts/*.sh
+        fi
+
+# メッセージ設定
+colors: true
+no_tty: false
+
+# Gitのカラー出力を有効化
+output:
+  - meta
+  - summary
