@@ -283,7 +283,7 @@ imas_music_db/
 - 全ファイル対象の品質チェック
 - Ruff・yamllint・ShellCheckによる最終検証
 
-**セットアップ**: 
+**セットアップ**:
 ```bash
 # lefthookのインストールと有効化
 uv run lefthook install
@@ -315,17 +315,3 @@ uv run lefthook install
 ```
 https://raw.githubusercontent.com/9c5s/imas_music_db/data/imas_music_db.json
 ```
-
-## コーディング規約
-
-- コメントは日本語で記述する
-- コメントは「だ・である調」で記述する
-- コメントに全角記号を使用しない
-- エラーハンドリングを適切に行う
-- セキュリティを考慮したコーディングを行う
-- コードの可読性を重視する
-- 関数やメソッドは単一責任の原則に従う
-- 命名規則は一貫性を持たせる
-- コードの再利用性を考慮する
-- ドキュメントを適切に記述する
-- パフォーマンスを意識する
