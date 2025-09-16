@@ -48,3 +48,6 @@ token.json
 
 # Claude instructions
 .claude/
+
+#Serena MCP
+.serena/
