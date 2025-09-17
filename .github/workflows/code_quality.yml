@@ -21,7 +21,7 @@ jobs:
     steps:
       # ステップ1: コードをチェックアウト
       - name: 1. リポジトリをチェックアウト
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # ステップ2: uvをインストール（高速なPythonパッケージマネージャー）
       - name: 2. uvのインストール
