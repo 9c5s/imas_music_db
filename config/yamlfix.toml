@@ -1,7 +1,7 @@
 # yamlfix設定ファイル（最も厳格な設定）
 
 # 基本設定
-line_length = 80
+line_length = 100
 preserve_quotes = true
 sequence_style = "block_style"
 none_representation = "null"
@@ -38,7 +38,7 @@ flow_style = "forbid"
 # 除外するファイルパターン
 exclude = [
     ".venv/**",
-    "venv/**", 
+    "venv/**",
     "**/__pycache__/**",
     "*.egg-info/**",
     ".yamllint.yml",

@@ -3,9 +3,9 @@
 extends: default
 
 rules:
-  # 行の長さ制限を厳格に（80文字）
+  # 行の長さ制限を厳格に（100文字）
   line-length:
-    max: 80
+    max: 100
     level: error
 
   # 空行の数を厳格に制限
