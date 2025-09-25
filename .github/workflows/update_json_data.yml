@@ -21,7 +21,7 @@ jobs:
     steps:
       # ステップ1: スクリプトが格納されているブランチ(main)をチェックアウトする
       - name: 1. スクリプト用リポジトリをチェックアウト (main)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: main
           # 'main_repo'というディレクトリにチェックアウトする
@@ -90,7 +90,7 @@ jobs:
       # ステップ9: 生成されたデータをコミットするブランチ(data)をチェックアウトする
       - name: 9. データコミット用リポジトリをチェックアウト (data)
         if: steps.generate_json.outputs.JSON_EXISTS == 'true'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: data
           path: data_repo
