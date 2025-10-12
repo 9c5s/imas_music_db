@@ -45,7 +45,7 @@ jobs:
 
       # ステップ4: uvをセットアップする（高速なPythonパッケージマネージャー）
       - name: 4. uvのセットアップ
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
           cache-dependency-glob: main_repo/pyproject.toml
