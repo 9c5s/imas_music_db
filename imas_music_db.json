@@ -1,5 +1,49 @@
 [
   {
+    "ID": "1908",
+    "曲名": "Borderline",
+    "よみがな": "ぼおだあらいん",
+    "CD題": "Borderline",
+    "作詞": ["Soflan Daichi"],
+    "作曲": ["石黑剛", "常楽寺澪"],
+    "編曲": ["石黑剛"],
+    "ブランド": ["シャイニー"],
+    "時間": "",
+    "歌唱": [
+      "シャイニーカラーズ",
+      "櫻木真乃",
+      "風野灯織",
+      "八宮めぐる",
+      "月岡恋鐘",
+      "田中摩美々",
+      "白瀬咲耶",
+      "三峰結華<2>",
+      "幽谷霧子",
+      "小宮果穂",
+      "園田智代子",
+      "西城樹里",
+      "杜野凛世",
+      "有栖川夏葉",
+      "大崎甘奈",
+      "大崎甜花",
+      "桑山千雪",
+      "芹沢あさひ",
+      "黛冬優子",
+      "和泉愛依",
+      "浅倉透",
+      "樋口円香",
+      "福丸小糸",
+      "市川雛菜",
+      "七草にちか",
+      "緋田美琴",
+      "鈴木羽那",
+      "郁田はるき"
+    ],
+    "CD品番": "LACA-25180",
+    "CD名": "#発売前:THE IDOLM@STER SHINY COLORS Song for Prism Borderline/クローバー/Summer Night Paradise",
+    "発売日": "2025-12-24"
+  },
+  {
     "ID": "1907",
     "曲名": "もしも「カワイイ」が世界からなくなっても",
     "よみがな": "もしもかわいいがせかいからなくなっても",
@@ -32,9 +76,9 @@
       "杜野凛世",
       "有栖川夏葉"
     ],
-    "CD品番": "",
-    "CD名": "",
-    "発売日": ""
+    "CD品番": "LACM-24808",
+    "CD名": "#発売前:THE IDOLM@STER SHINY COLORS 乱舞る/疾風ザブングル",
+    "発売日": "2026-01-14"
   },
   {
     "ID": "1905",
@@ -494,7 +538,7 @@
     "作曲": ["錦織孝宏[TRYTONELABO]"],
     "編曲": ["a2c[MintJam]"],
     "ブランド": ["SideM"],
-    "時間": "",
+    "時間": "03:42",
     "歌唱": ["天ヶ瀬冬馬", "握野英雄", "卯月巻緒", "牙崎漣"],
     "CD品番": "LACM-24761",
     "CD名": "THE IDOLM@STER SideM TRANSCENDENT T@LES 01",
@@ -550,9 +594,9 @@
       "緋田美琴",
       "鈴木羽那"
     ],
-    "CD品番": "LZC-3208",
-    "CD名": "#配信:Summer Night Paradise",
-    "発売日": "2025-08-08"
+    "CD品番": "LACA-25180",
+    "CD名": "#発売前:THE IDOLM@STER SHINY COLORS Song for Prism Borderline/クローバー/Summer Night Paradise",
+    "発売日": "2025-12-24"
   },
   {
     "ID": "1875",
@@ -672,7 +716,7 @@
       "矢吹可奈"
     ],
     "CD品番": "LACM-24801",
-    "CD名": "#発売前:THE IDOLM@STER MILLION BATTLE OF THE@TER EX01 Hug a nice day!",
+    "CD名": "THE IDOLM@STER MILLION BATTLE OF THE@TER EX01 Hug a nice day!",
     "発売日": "2025-10-29"
   },
   {
@@ -854,9 +898,9 @@
     "ブランド": ["シャイニー"],
     "時間": "04:11",
     "歌唱": ["大崎甘奈", "杜野凛世", "市川雛菜", "七草にちか"],
-    "CD品番": "LZC-3142",
-    "CD名": "#配信:クローバー",
-    "発売日": "2025-06-07"
+    "CD品番": "LACA-25180",
+    "CD名": "#発売前:THE IDOLM@STER SHINY COLORS Song for Prism Borderline/クローバー/Summer Night Paradise",
+    "発売日": "2025-12-24"
   },
   {
     "ID": "1857",
@@ -954,7 +998,7 @@
     "時間": "03:53",
     "歌唱": ["辻野あかり", "関裕美"],
     "CD品番": "COCC-18250",
-    "CD名": "#発売前:THE IDOLM@STER CINDERELLA GIRLS STARLIGHT MASTER CRYSTAL QUALIA 10 オトメゴコロ更新中",
+    "CD名": "THE IDOLM@STER CINDERELLA GIRLS STARLIGHT MASTER CRYSTAL QUALIA 10 オトメゴコロ更新中",
     "発売日": "2025-10-29"
   },
   {
