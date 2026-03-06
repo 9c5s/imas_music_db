@@ -174,11 +174,11 @@ imas_music_db/
 
 ### メインコンポーネント
 
-1. **GoogleApiService** (`sheet_to_json.py:159-187`)
+1. **GoogleApiService** (`sheet_to_json.py`)
    - Google Sheets APIの認証とサービス初期化を管理
    - スコープ: `spreadsheets.readonly`
 
-2. **SheetProcessor** (`sheet_to_json.py:190-`)
+2. **SheetProcessor** (`sheet_to_json.py`)
    - スプレッドシートの生データを設定に基づいて処理・整形
    - IDの降順ソート、配列フィールドの統合処理
 
