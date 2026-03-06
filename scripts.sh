@@ -24,13 +24,10 @@ show_help()
   echo "  type-check     - Pyrightによる型チェック"
   echo "  test           - 全てのコード品質チェック（型チェック含む）"
   echo "  run            - メインスクリプトの実行"
-  echo "  pr             - PR作成と自動監視"
-  echo "  monitor        - 最新PRの監視"
   echo "  clean          - 一時ファイルの削除"
   echo "  help           - このヘルプを表示"
   echo ""
   echo "例:"
-  echo "  ./scripts.sh pr        # PR作成と監視"
   echo "  ./scripts.sh test      # コード品質チェック"
   echo "  ./scripts.sh shell-check  # シェルスクリプト品質チェック"
   echo "  ./scripts.sh run       # メインスクリプト実行"
@@ -70,18 +67,18 @@ case "${1:-help}" in
     ;;
   "shell-lint")
     echo "🔍 シェルスクリプトをリンティング中..."
-    uv run shellcheck --rcfile=config/.shellcheckrc ./*.sh scripts/*.sh 2> /dev/null || echo "⚠️  一部のシェルスクリプトファイルが見つかりませんでした"
+    uv run shellcheck --rcfile=config/.shellcheckrc ./*.sh
     ;;
   "shell-format")
     echo "💅 シェルスクリプトをフォーマット中..."
-    uv run shfmt -i 2 -p -s -ci -sr -fn -w ./*.sh scripts/*.sh 2> /dev/null || echo "⚠️  一部のシェルスクリプトファイルが見つかりませんでした"
+    uv run shfmt -i 2 -p -s -ci -sr -fn -w ./*.sh
     ;;
   "shell-check")
     echo "🧪 シェルスクリプト品質チェックを実行中..."
     echo "--- シェルスクリプトリンティング ---"
-    uv run shellcheck --rcfile=config/.shellcheckrc ./*.sh scripts/*.sh 2> /dev/null || echo "⚠️  一部のシェルスクリプトファイルが見つかりませんでした"
+    uv run shellcheck --rcfile=config/.shellcheckrc ./*.sh
     echo "--- シェルスクリプトフォーマットチェック ---"
-    uv run shfmt -i 2 -p -s -ci -sr -fn -d ./*.sh scripts/*.sh 2> /dev/null || echo "⚠️  一部のシェルスクリプトファイルが見つかりませんでした"
+    uv run shfmt -i 2 -p -s -ci -sr -fn -d ./*.sh
     echo "✅ シェルスクリプト品質チェックが完了しました"
     ;;
   "type-check")
@@ -98,22 +95,14 @@ case "${1:-help}" in
     echo "--- YAMLリンティング ---"
     uv run yamllint -c config/yamllint.yml .
     echo "--- シェルスクリプトリンティング ---"
-    uv run shellcheck --rcfile=config/.shellcheckrc ./*.sh scripts/*.sh 2> /dev/null || echo "⚠️  一部のシェルスクリプトファイルが見つかりませんでした"
+    uv run shellcheck --rcfile=config/.shellcheckrc ./*.sh
     echo "--- シェルスクリプトフォーマットチェック ---"
-    uv run shfmt -i 2 -p -s -ci -sr -fn -d ./*.sh scripts/*.sh 2> /dev/null || echo "⚠️  一部のシェルスクリプトファイルが見つかりませんでした"
+    uv run shfmt -i 2 -p -s -ci -sr -fn -d ./*.sh
     echo "✅ 全てのコード品質チェックが完了しました"
     ;;
   "run")
     echo "🚀 メインスクリプトを実行中..."
     uv run python sheet_to_json.py
-    ;;
-  "pr")
-    echo "🚀 PR作成と監視を開始..."
-    uv run python scripts/auto_pr.py
-    ;;
-  "monitor")
-    echo "🔍 最新PRを監視中..."
-    uv run python scripts/monitor_pr.py
     ;;
   "clean")
     echo "🧹 一時ファイルを削除中..."
