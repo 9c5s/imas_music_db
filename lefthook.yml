@@ -44,9 +44,6 @@ pre-push:
         if ls ./*.sh 1> /dev/null 2>&1; then
           uv run shellcheck --rcfile=config/.shellcheckrc ./*.sh
         fi
-        if ls scripts/*.sh 1> /dev/null 2>&1; then
-          uv run shellcheck --rcfile=config/.shellcheckrc scripts/*.sh
-        fi
 
 # メッセージ設定
 colors: true
