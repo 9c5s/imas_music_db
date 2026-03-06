@@ -62,13 +62,13 @@ uv run yamlfix -c config/yamlfix.toml .
 #### シェルスクリプト（厳格ルール）
 ```bash
 # ShellCheckによるリンティング（全ルール有効）
-uv run shellcheck --rcfile=config/.shellcheckrc ./*.sh scripts/*.sh
+uv run shellcheck --rcfile=config/.shellcheckrc ./*.sh
 
 # shfmtによるフォーマット（POSIX準拠）
-uv run shfmt -i 2 -p -s -ci -sr -fn -w ./*.sh scripts/*.sh
+uv run shfmt -i 2 -p -s -ci -sr -fn -w ./*.sh
 
 # フォーマットチェック（差分表示）
-uv run shfmt -i 2 -p -s -ci -sr -fn -d ./*.sh scripts/*.sh
+uv run shfmt -i 2 -p -s -ci -sr -fn -d ./*.sh
 ```
 
 **厳格ルール詳細:**
@@ -80,15 +80,6 @@ uv run shfmt -i 2 -p -s -ci -sr -fn -d ./*.sh scripts/*.sh
 - **セキュリティ**: 変数クォート・終了コード検証
 
 ### 開発タスク（uvベース）
-
-#### ワンコマンドでPR作成・監視
-```bash
-# PR自動作成と監視（推奨）
-./scripts.sh pr
-
-# または直接実行
-uv run python scripts/auto_pr.py
-```
 
 #### コード品質チェック
 ```bash
@@ -134,14 +125,8 @@ uv run python scripts/auto_pr.py
 # メインスクリプト実行
 ./scripts.sh run
 
-# 最新PRの監視
-./scripts.sh monitor
-
 # 一時ファイル削除
 ./scripts.sh clean
-
-# ワークフローエラーの自動修正
-uv run python scripts/fix_workflow_errors.py
 ```
 
 ### 認証設定
@@ -165,12 +150,7 @@ imas_music_db/
 │   ├── .editorconfig      # shfmtフォーマッター設定
 │   ├── pyrightconfig.json # Pyright型チェッカー設定
 │   └── sheet_config.yml   # スプレッドシート設定（外部分離）
-├── scripts/               # 自動化スクリプト
-│   ├── auto_pr.py         # PR作成・監視自動化
-│   ├── fix_workflow_errors.py # ワークフローエラー自動修正
-│   └── monitor_pr.py      # PR監視
 ├── .github/workflows/     # GitHub Actions
-│   ├── code_quality.yml   # コード品質チェック（型チェック含む）
 │   ├── update_json_data.yml # データ更新自動化
 │   └── claude.yml         # Claude Code連携
 ├── sheet_to_json.py       # メインスクリプト
@@ -194,23 +174,13 @@ imas_music_db/
 
 ### メインコンポーネント
 
-1. **GoogleApiService** (`sheet_to_json.py:113-140`)
-   - Google Drive API・Sheets APIの認証とサービス初期化を管理
-   - スコープ: `drive`, `spreadsheets`
+1. **GoogleApiService** (`sheet_to_json.py`)
+   - Google Sheets APIの認証とサービス初期化を管理
+   - スコープ: `spreadsheets.readonly`
 
-2. **SheetCopier** (`sheet_to_json.py`)
-   - スプレッドシートの一時コピー作成・削除を管理
-   - コンテキストマネージャーとして実装（自動クリーンアップ）
-
-3. **SheetProcessor** (`sheet_to_json.py:142-`)
+2. **SheetProcessor** (`sheet_to_json.py`)
    - スプレッドシートの生データを設定に基づいて処理・整形
    - IDの降順ソート、配列フィールドの統合処理
-
-4. **WorkflowErrorFixer** (`scripts/fix_workflow_errors.py`)
-   - GitHub Actionsのコード品質チェックエラーを自動修正
-   - Ruffフォーマット・リンティングエラーの自動修正
-   - YAMLエラーの自動修正
-   - 修正のコミット・プッシュと結果確認
 
 ### データフロー
 
@@ -251,18 +221,7 @@ imas_music_db/
    - dataブランチに変更をコミット・プッシュ
    - 新しいリリースを作成・JSONファイルを添付
 
-### コード品質チェックワークフロー
-
-プルリクエスト作成時に以下のワークフローが自動実行されます：
-
-**`code_quality.yml`**: 統合コード品質チェック（PRコメント付き）
-- **Pythonファイル**: Ruffリンティング・フォーマットチェック・Pyright型チェック
-- **YAMLファイル**: yamllintチェック
-- **シェルスクリプト**: ShellCheck・shfmtチェック
-- チェック結果をPRにコメントとして投稿
-- 統計情報と修正方法の表示
-- GitHub Actions UI上でのエラー表示
-- 4言語統合による包括的な品質保証（型安全性含む）
+### Claude Code連携ワークフロー
 
 **`claude.yml`**: Claude Code連携ワークフロー
 - PRコメント・イシュー・レビューでの@claudeメンション対応
@@ -307,7 +266,7 @@ uv run lefthook install
 
 - Workload Identity連携による認証
 - 必要なシークレット: `GCP_WORKLOAD_IDENTITY_PROVIDER`, `GCP_SERVICE_ACCOUNT`
-- APIスコープ: Google Drive API, Google Sheets API
+- APIスコープ: Google Sheets API（読み取り専用）
 
 ## データ配信
 
