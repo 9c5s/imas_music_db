@@ -31,25 +31,25 @@ uv run sheet_to_json.py
 #### Pythonコード
 ```bash
 # Ruffによるリンティング
-uv run ruff check --config config/ruff.toml
+uv run ruff check
 
 # Ruffによる自動修正
-uv run ruff check --fix --config config/ruff.toml
+uv run ruff check --fix
 
 # フォーマッティング
-uv run ruff format --config config/ruff.toml
+uv run ruff format
 
 # Pyrightによる型チェック
-uv run pyright -p config/pyrightconfig.json
+uv run pyright
 ```
 
 #### YAMLファイル（厳格ルール）
 ```bash
 # yamllintによるリンティング（厳格設定）
-uv run yamllint -c config/yamllint.yml .
+uv run yamllint .
 
 # yamlfixによる自動フォーマット（厳格設定）
-uv run yamlfix -c config/yamlfix.toml .
+uv run yamlfix .
 ```
 
 **厳格ルール詳細:**
@@ -62,7 +62,7 @@ uv run yamlfix -c config/yamlfix.toml .
 #### シェルスクリプト（厳格ルール）
 ```bash
 # ShellCheckによるリンティング（全ルール有効）
-uv run shellcheck --rcfile=config/.shellcheckrc ./*.sh
+uv run shellcheck ./*.sh
 
 # shfmtによるフォーマット（POSIX準拠）
 uv run shfmt -i 2 -p -s -ci -sr -fn -w ./*.sh
@@ -142,30 +142,25 @@ uv run lefthook install
 
 ```
 imas_music_db/
-├── config/                 # 設定ファイル
-│   ├── ruff.toml          # Pythonリンター/フォーマッター設定
-│   ├── yamllint.yml       # YAMLリンター設定
-│   ├── yamlfix.toml       # YAML自動修正設定
-│   ├── .shellcheckrc      # ShellCheckリンター設定
-│   ├── .editorconfig      # shfmtフォーマッター設定
-│   ├── pyrightconfig.json # Pyright型チェッカー設定
-│   └── sheet_config.yml   # スプレッドシート設定（外部分離）
 ├── .github/workflows/     # GitHub Actions
 │   ├── update_json_data.yml # データ更新自動化
 │   └── claude.yml         # Claude Code連携
+├── .editorconfig          # shfmtフォーマッター設定
+├── .shellcheckrc          # ShellCheckリンター設定（自動検出）
+├── .yamllint.yml          # YAMLリンター設定（自動検出）
 ├── sheet_to_json.py       # メインスクリプト
+├── sheet_config.yml       # スプレッドシート設定
 ├── scripts.sh             # 開発タスクランナー
 ├── lefthook.yml           # Gitフック自動化設定
-├── pyproject.toml         # プロジェクト設定
+├── pyproject.toml         # プロジェクト設定・品質チェック設定
 └── README.md
 ```
 
 ### 設定ファイルの管理
 
-- **config/ディレクトリ**: 全ての品質チェック設定を集約
-  - Python（Ruff・Pyright）、YAML（yamllint/yamlfix）、シェルスクリプト（ShellCheck/shfmt）
-  - スプレッドシート設定の外部分離（sheet_config.yml）
-- **統一された実行方法**: `scripts.sh`経由で設定ファイルパスを自動指定
+- **pyproject.toml**: Ruff・Pyright・yamlfixの設定を統合（自動検出）
+- **ルートの設定ファイル**: yamllint・ShellCheck・shfmt用（各ツールが自動検出）
+- **統一された実行方法**: `scripts.sh`経由で実行（設定ファイルパス指定不要）
 - **GitHub Actions連携**: CI/CDパイプラインでも同じ設定を使用
 - **4言語統合**: Python・YAML・シェルスクリプト・型チェックの統一的品質管理
 - **Gitフック自動化**: lefthook.ymlによるコミット前品質チェック
@@ -184,7 +179,7 @@ imas_music_db/
 
 ### データフロー
 
-1. YAML設定ファイル（`config/sheet_config.yml`）から設定を読み込み
+1. YAML設定ファイル（`sheet_config.yml`）から設定を読み込み
 2. 指定されたスプレッドシートから直接データを読み取り
 3. 列マッピング設定に従ってJSONオブジェクトに変換
 4. IDフィールドの降順でソート
@@ -192,7 +187,7 @@ imas_music_db/
 
 ### 設定
 
-メインの設定は `config/sheet_config.yml` で管理される外部設定ファイル：
+メインの設定は `sheet_config.yml` で管理される外部設定ファイル：
 - **spreadsheet**: スプレッドシート基本設定
   - `source_id`: コピー元スプレッドシートID
   - `target_sheet`: 読み取り対象シート名

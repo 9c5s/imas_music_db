@@ -47,27 +47,27 @@ case "${1:-help}" in
     ;;
   "lint")
     echo "🔍 Pythonコードをリンティング中..."
-    uv run ruff check --config config/ruff.toml
+    uv run ruff check
     ;;
   "lint-fix")
     echo "🔧 Pythonコードをリンティング（自動修正）中..."
-    uv run ruff check --fix --config config/ruff.toml
+    uv run ruff check --fix
     ;;
   "format")
     echo "💅 Pythonコードをフォーマット中..."
-    uv run ruff format --config config/ruff.toml
+    uv run ruff format
     ;;
   "yaml-lint")
     echo "📄 YAMLファイルをリンティング中..."
-    uv run yamllint -c config/yamllint.yml .
+    uv run yamllint .
     ;;
   "yaml-fix")
     echo "🔧 YAMLファイルを自動修正中..."
-    uv run yamlfix -c config/yamlfix.toml .
+    uv run yamlfix .
     ;;
   "shell-lint")
     echo "🔍 シェルスクリプトをリンティング中..."
-    uv run shellcheck --rcfile=config/.shellcheckrc ./*.sh
+    uv run shellcheck ./*.sh
     ;;
   "shell-format")
     echo "💅 シェルスクリプトをフォーマット中..."
@@ -76,26 +76,26 @@ case "${1:-help}" in
   "shell-check")
     echo "🧪 シェルスクリプト品質チェックを実行中..."
     echo "--- シェルスクリプトリンティング ---"
-    uv run shellcheck --rcfile=config/.shellcheckrc ./*.sh
+    uv run shellcheck ./*.sh
     echo "--- シェルスクリプトフォーマットチェック ---"
     uv run shfmt -i 2 -p -s -ci -sr -fn -d ./*.sh
     echo "✅ シェルスクリプト品質チェックが完了しました"
     ;;
   "type-check")
     echo "🔍 Pyrightによる型チェックを実行中..."
-    uv run pyright -p config/pyrightconfig.json
+    uv run pyright
     echo "✅ 型チェックが完了しました"
     ;;
   "test")
     echo "🧪 全てのコード品質チェックを実行中..."
     echo "--- Pythonリンティング ---"
-    uv run ruff check --config config/ruff.toml
+    uv run ruff check
     echo "--- Python型チェック ---"
-    uv run pyright -p config/pyrightconfig.json
+    uv run pyright
     echo "--- YAMLリンティング ---"
-    uv run yamllint -c config/yamllint.yml .
+    uv run yamllint .
     echo "--- シェルスクリプトリンティング ---"
-    uv run shellcheck --rcfile=config/.shellcheckrc ./*.sh
+    uv run shellcheck ./*.sh
     echo "--- シェルスクリプトフォーマットチェック ---"
     uv run shfmt -i 2 -p -s -ci -sr -fn -d ./*.sh
     echo "✅ 全てのコード品質チェックが完了しました"
