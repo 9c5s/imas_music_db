@@ -3,6 +3,15 @@
 pre-commit:
   parallel: true
   commands:
+    # メインブランチへの直接コミットを防止
+    protect-branch:
+      run: >
+        d=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null|sed s,.*/,,)&&
+        [ x${d} != x ]&&
+        [ $(git symbolic-ref --short HEAD) = $d ]&&
+        echo Direct commits to $d are not allowed. Use a feature branch.&&
+        exit 1;true
+
     # Python品質チェック
     python-lint:
       glob: "*.py"
