@@ -136,7 +136,7 @@ jobs:
       # ステップ11: 新しいデータでリリースを作成してアセットをアップロード
       - name: 11. リリースを作成してアセットをアップロード
         if: steps.commit_push.outputs.committed == 'true'
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           tag_name: ${{ steps.commit_push.outputs.tag_name }}
