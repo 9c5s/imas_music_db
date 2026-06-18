@@ -1,5 +1,20 @@
 [
   {
+    "ID": "1994",
+    "曲名": "Ring Ding Wrong",
+    "よみがな": "",
+    "CD題": "Ring Ding Wrong",
+    "作詞": ["山崎寛子"],
+    "作曲": ["NullPencil[Digz, Inc. Group]"],
+    "編曲": ["NullPencil[Digz, Inc. Group]"],
+    "ブランド": ["SideM"],
+    "時間": "",
+    "歌唱": ["蒼井享介", "猫柳キリオ", "秋山隼人", "大河タケル"],
+    "CD品番": "LACM-24771",
+    "CD名": "#発売前:THE IDOLM@STER SideM TRANSCENDENT T@LES 11",
+    "発売日": "2026-08-05"
+  },
+  {
     "ID": "1993",
     "曲名": "Remain Viable",
     "よみがな": "",
@@ -11,8 +26,8 @@
     "時間": "",
     "歌唱": ["Legenders", "葛之葉雨彦", "北村想楽", "古論クリス"],
     "CD品番": "LACM-24789",
-    "CD名": "THE IDOLM@STER SideM ～P@SSION CHALLENGE We are 315!～ MONTHLY THEME SONG 09",
-    "発売日": "1899-12-30"
+    "CD名": "#発売前:THE IDOLM@STER SideM ～P@SSION CHALLENGE We are 315!～ MONTHLY THEME SONG 09 Legenders",
+    "発売日": "2026-07-29"
   },
   {
     "ID": "1992",
