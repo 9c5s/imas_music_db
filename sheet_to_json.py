@@ -52,11 +52,11 @@ class Config(TypedDict):
 
 
 # --- 設定読み込み機能 ---
-def load_config(config_path: str = "config/sheet_config.yml") -> Config:
+def load_config(config_path: str = "sheet_config.yml") -> Config:
     """YAML設定ファイルを読み込み、Config型として返す
 
     Args:
-        config_path: 設定ファイルのパス(デフォルト: config/sheet_config.yml)
+        config_path: 設定ファイルのパス(デフォルト: sheet_config.yml)
 
     Returns:
         Config: 読み込んだ設定データ

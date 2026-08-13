@@ -3,29 +3,46 @@
 pre-commit:
   parallel: true
   commands:
+    # メインブランチへの直接コミットを防止
+    protect-branch:
+      run: |
+        # lefthook は Windows でスクリプト内の二重引用符をエスケープせずに
+        # sh -c へ埋め込むため、二重引用符を使わずに書く
+        # ブランチ名は空白を含まないため引用符なしの展開でも安全である
+        default_branch=$(git symbolic-ref refs/remotes/origin/HEAD \
+          2> /dev/null | sed 's,.*/,,')
+        # origin/HEAD 未解決時も保護が機能するよう main にフォールバック
+        [ x${default_branch} = x ] && default_branch=main
+        current_branch=$(git symbolic-ref --short HEAD 2> /dev/null || true)
+        if [ x${current_branch} = x${default_branch} ]; then
+          echo Direct commits to ${default_branch} are not allowed. >&2
+          echo Use a feature branch. >&2
+          exit 1
+        fi
+
     # Python品質チェック
     python-lint:
       glob: "*.py"
-      run: uv run ruff check --fix --config config/ruff.toml {staged_files}
+      run: uv run ruff check --fix {staged_files}
       stage_fixed: true
     python-format:
       glob: "*.py"
-      run: uv run ruff format --config config/ruff.toml {staged_files}
+      run: uv run ruff format {staged_files}
       stage_fixed: true
 
     # YAML品質チェック
     yaml-lint:
       glob: "*.{yaml,yml}"
-      run: uv run yamllint -c config/yamllint.yml {staged_files}
+      run: uv run yamllint {staged_files}
     yaml-format:
       glob: "*.{yaml,yml}"
-      run: uv run yamlfix -c config/yamlfix.toml {staged_files}
+      run: uv run yamlfix {staged_files}
       stage_fixed: true
 
     # シェルスクリプト品質チェック
     shell-lint:
       glob: "*.sh"
-      run: uv run shellcheck --rcfile=config/.shellcheckrc {staged_files}
+      run: uv run shellcheck {staged_files}
     shell-format:
       glob: "*.sh"
       run: uv run shfmt -i 2 -p -s -ci -sr -fn -w {staged_files}
@@ -36,13 +53,13 @@ pre-push:
   commands:
     # より包括的な品質チェック（全ファイル対象）
     python-check-all:
-      run: uv run ruff check --config config/ruff.toml .
+      run: uv run ruff check .
     yaml-check-all:
-      run: uv run yamllint -c config/yamllint.yml .
+      run: uv run yamllint .
     shell-check-all:
       run: |
         if ls ./*.sh 1> /dev/null 2>&1; then
-          uv run shellcheck --rcfile=config/.shellcheckrc ./*.sh
+          uv run shellcheck ./*.sh
         fi
 
 # メッセージ設定
