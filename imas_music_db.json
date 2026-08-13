@@ -100,7 +100,7 @@
     "時間": "",
     "歌唱": [],
     "CD品番": "SACX-1144",
-    "CD名": "#発売前:THE IDOLM@STER CINDERELLA GIRLS CONCEPT xR LIVE Pop'n ToyBox!! Poppin' para Pong!",
+    "CD名": "THE IDOLM@STER CINDERELLA GIRLS CONCEPT xR LIVE Pop'n ToyBox!! Poppin' para Pong!",
     "発売日": "2026-08-13"
   },
   {
@@ -115,7 +115,7 @@
     "時間": "",
     "歌唱": [],
     "CD品番": "SACX-1145",
-    "CD名": "#発売前:THE IDOLM@STER CINDERELLA GIRLS CONCEPT xR LIVE Pop'n ToyBox!! Cookie Dough",
+    "CD名": "THE IDOLM@STER CINDERELLA GIRLS CONCEPT xR LIVE Pop'n ToyBox!! Cookie Dough",
     "発売日": "2026-08-13"
   },
   {
@@ -168,15 +168,15 @@
     "曲名": "エクストリーム・オーバードライブ",
     "よみがな": "えくすとりいむおおばあどらいぶ",
     "CD題": "エクストリーム・オーバードライブ",
-    "作詞": [],
-    "作曲": [],
-    "編曲": [],
+    "作詞": ["篠崎あやと"],
+    "作曲": ["篠崎あやと"],
+    "編曲": ["篠崎あやと"],
     "ブランド": [],
-    "時間": "",
-    "歌唱": [],
-    "CD品番": "",
-    "CD名": "",
-    "発売日": ""
+    "時間": "03:12",
+    "歌唱": ["玲音"],
+    "CD品番": "SACX-1149",
+    "CD名": "THE IDOLM@STER 20th Anniversary MORE RE@LITY LIVE IDOL WORLD SUPER FESTIVAL 2026 【961PRODUCTION & KOHAKU & 765PRO ALLSTARS】",
+    "発売日": "2026-07-24"
   },
   {
     "ID": "1997",
