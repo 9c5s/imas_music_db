@@ -9,6 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## 開発コマンド
 
 ### セットアップ
+
 ```bash
 # 依存関係のインストール（本番用）
 uv sync --no-dev
@@ -18,6 +19,7 @@ uv sync
 ```
 
 ### メインスクリプトの実行
+
 ```bash
 # スプレッドシートからJSONを生成
 python sheet_to_json.py
@@ -29,6 +31,7 @@ uv run sheet_to_json.py
 ### コード品質チェック
 
 #### Pythonコード
+
 ```bash
 # Ruffによるリンティング
 uv run ruff check
@@ -44,6 +47,7 @@ uv run pyright
 ```
 
 #### YAMLファイル（厳格ルール）
+
 ```bash
 # yamllintによるリンティング（厳格設定）
 uv run yamllint .
@@ -60,6 +64,7 @@ uv run yamlfix .
 - スペーシング・フォーマット: 厳格に統一
 
 #### シェルスクリプト（厳格ルール）
+
 ```bash
 # ShellCheckによるリンティング（全ルール有効）
 uv run shellcheck ./*.sh
@@ -82,6 +87,7 @@ uv run shfmt -i 2 -p -s -ci -sr -fn -d ./*.sh
 ### 開発タスク（uvベース）
 
 #### コード品質チェック
+
 ```bash
 # 全てのコード品質チェック
 ./scripts.sh test
@@ -115,6 +121,7 @@ uv run shfmt -i 2 -p -s -ci -sr -fn -d ./*.sh
 ```
 
 #### その他の開発コマンド
+
 ```bash
 # ヘルプ表示
 ./scripts.sh help
@@ -130,6 +137,7 @@ uv run shfmt -i 2 -p -s -ci -sr -fn -d ./*.sh
 ```
 
 ### 認証設定
+
 ```bash
 # Google Cloud認証（初回のみ）
 gcloud auth application-default login
