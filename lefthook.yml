@@ -5,12 +5,20 @@ pre-commit:
   commands:
     # メインブランチへの直接コミットを防止
     protect-branch:
-      run: >
-        d=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null|sed s,.*/,,)&&
-        [ x${d} != x ]&&
-        [ $(git symbolic-ref --short HEAD) = $d ]&&
-        echo Direct commits to $d are not allowed. Use a feature branch.&&
-        exit 1;true
+      run: |
+        # lefthook は Windows でスクリプト内の二重引用符をエスケープせずに
+        # sh -c へ埋め込むため、二重引用符を使わずに書く
+        # ブランチ名は空白を含まないため引用符なしの展開でも安全である
+        default_branch=$(git symbolic-ref refs/remotes/origin/HEAD \
+          2> /dev/null | sed 's,.*/,,')
+        # origin/HEAD 未解決時も保護が機能するよう main にフォールバック
+        [ x${default_branch} = x ] && default_branch=main
+        current_branch=$(git symbolic-ref --short HEAD 2> /dev/null || true)
+        if [ x${current_branch} = x${default_branch} ]; then
+          echo Direct commits to ${default_branch} are not allowed. >&2
+          echo Use a feature branch. >&2
+          exit 1
+        fi
 
     # Python品質チェック
     python-lint:
