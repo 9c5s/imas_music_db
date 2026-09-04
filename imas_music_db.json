@@ -7753,7 +7753,16 @@
     "編曲": ["春川仁志"],
     "ブランド": ["SideM"],
     "時間": "03:24",
-    "歌唱": ["Legenders", "C.FIRST"],
+    "歌唱": [
+      "Legenders",
+      "C.FIRST",
+      "葛之葉雨彦",
+      "北村想楽",
+      "古論クリス",
+      "天峰秀",
+      "花園百々人",
+      "眉見鋭心"
+    ],
     "CD品番": "LACM-24516",
     "CD名": "THE IDOLM@STER SideM F@NTASTIC COMBINATION～CONNECTIME!!!!～―DIMENSION ARROW― Legenders",
     "発売日": "2024-03-06"
