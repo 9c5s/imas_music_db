@@ -173,21 +173,6 @@
   },
   {
     "ID": "2043",
-    "曲名": "HELL-O",
-    "よみがな": "へるおお",
-    "CD題": "HELL-O",
-    "作詞": ["Soflan Daichi"],
-    "作曲": ["kenken[from ARKTA]"],
-    "編曲": ["kenken[from ARKTA]"],
-    "ブランド": ["シャイニー"],
-    "時間": "03:49",
-    "歌唱": ["斑鳩ルカ"],
-    "CD品番": "LACA-25302",
-    "CD名": "THE IDOLM@STER SHINY COLORS HOPEFUL FE@THERS ―Luna―",
-    "発売日": "2026-09-16"
-  },
-  {
-    "ID": "2042",
     "曲名": "Be-witched",
     "よみがな": "びいうぃっちど",
     "CD題": "Be-witched",
@@ -202,7 +187,7 @@
     "発売日": "2026-09-16"
   },
   {
-    "ID": "2041",
+    "ID": "2042",
     "曲名": "Here for you",
     "よみがな": "ひあふぉおゆう",
     "CD題": "Here for you",
@@ -212,6 +197,21 @@
     "ブランド": ["シャイニー"],
     "時間": "04:10",
     "歌唱": ["福丸小糸"],
+    "CD品番": "LACA-25302",
+    "CD名": "THE IDOLM@STER SHINY COLORS HOPEFUL FE@THERS ―Luna―",
+    "発売日": "2026-09-16"
+  },
+  {
+    "ID": "2041",
+    "曲名": "HELL-O",
+    "よみがな": "はろお",
+    "CD題": "HELL-O",
+    "作詞": ["Soflan Daichi"],
+    "作曲": ["kenken[from ARKTA]"],
+    "編曲": ["kenken[from ARKTA]"],
+    "ブランド": ["シャイニー"],
+    "時間": "03:49",
+    "歌唱": ["斑鳩ルカ"],
     "CD品番": "LACA-25302",
     "CD名": "THE IDOLM@STER SHINY COLORS HOPEFUL FE@THERS ―Luna―",
     "発売日": "2026-09-16"
@@ -391,7 +391,7 @@
     "編曲": ["涼木シンジ[KEYTONE]"],
     "ブランド": ["シャイニー"],
     "時間": "03:15",
-    "歌唱": ["三峰結華"],
+    "歌唱": ["三峰結華<2>"],
     "CD品番": "LACA-25302",
     "CD名": "THE IDOLM@STER SHINY COLORS HOPEFUL FE@THERS ―Luna―",
     "発売日": "2026-09-16"
