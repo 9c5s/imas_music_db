@@ -1383,7 +1383,7 @@
       "箱崎星梨花"
     ],
     "CD品番": "LACA-25290",
-    "CD名": "#発売前:THE IDOLM@STER MILLION BATTLE OF THE@TER 10 INVISIBLE LIGHT",
+    "CD名": "THE IDOLM@STER MILLION BATTLE OF THE@TER 10 INVISIBLE LIGHT",
     "発売日": "2026-10-28"
   },
   {
@@ -3735,9 +3735,9 @@
     "曲名": "SUGAR FLAVOR",
     "よみがな": "しゅがあふれえばあ",
     "CD題": "SUGAR FLAVOR",
-    "作詞": [],
-    "作曲": [],
-    "編曲": [],
+    "作詞": ["Kai Takahashi"],
+    "作曲": ["Kai Takahashi"],
+    "編曲": ["Kai Takahashi"],
     "ブランド": ["学園"],
     "時間": "03:04",
     "歌唱": ["有村麻央", "姫崎莉波"],
