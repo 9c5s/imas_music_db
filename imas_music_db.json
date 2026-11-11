@@ -1,5 +1,20 @@
 [
   {
+    "ID": "2082",
+    "曲名": "テイラーメイド・ロマンス",
+    "よみがな": "ていらあめいどろまんす",
+    "CD題": "テイラーメイド・ロマンス",
+    "作詞": ["真崎エリカ"],
+    "作曲": ["中村千尋[SUPA LOVE]"],
+    "編曲": ["中村千尋[SUPA LOVE]"],
+    "ブランド": ["SideM"],
+    "時間": "",
+    "歌唱": ["Beit", "鷹城恭二", "ピエール", "渡辺みのり"],
+    "CD品番": "LACM-24794",
+    "CD名": "#発売前:THE IDOLM@STER SideM ～P@SSION CHALLENGE We are 315!～ MONTHLY THEME SONG 14 Beit",
+    "発売日": "2026-12-23"
+  },
+  {
     "ID": "2081",
     "曲名": "クロスファイア",
     "よみがな": "くろすふぁいあ",
@@ -363,7 +378,7 @@
     "時間": "04:16",
     "歌唱": ["馬場このみ", "百瀬莉緒"],
     "CD品番": "LACZ-10384",
-    "CD名": "#発売前:THE IDOLM@STER MILLION LIVE! Present",
+    "CD名": "THE IDOLM@STER MILLION LIVE! Present",
     "発売日": "2026-11-11"
   },
   {
@@ -378,7 +393,7 @@
     "時間": "03:27",
     "歌唱": ["百瀬莉緒"],
     "CD品番": "LACZ-10383",
-    "CD名": "#発売前:THE IDOLM@STER MILLION LIVE! Waking Up My Heart",
+    "CD名": "THE IDOLM@STER MILLION LIVE! Waking Up My Heart",
     "発売日": "2026-11-11"
   },
   {
@@ -393,7 +408,7 @@
     "時間": "04:13",
     "歌唱": ["馬場このみ"],
     "CD品番": "LACZ-10382",
-    "CD名": "#発売前:THE IDOLM@STER MILLION LIVE! If I…",
+    "CD名": "THE IDOLM@STER MILLION LIVE! If I…",
     "発売日": "2026-11-11"
   },
   {
@@ -408,7 +423,7 @@
     "時間": "03:30",
     "歌唱": ["徳川まつり", "エミリー スチュアート"],
     "CD品番": "LACZ-10380",
-    "CD名": "#発売前:THE IDOLM@STER MILLION LIVE! パルティシオン",
+    "CD名": "THE IDOLM@STER MILLION LIVE! パルティシオン",
     "発売日": "2026-11-11"
   },
   {
@@ -423,7 +438,7 @@
     "時間": "03:58",
     "歌唱": ["徳川まつり"],
     "CD品番": "LACZ-10381",
-    "CD名": "#発売前:THE IDOLM@STER MILLION LIVE! ネバーエンド・ワンダーランド",
+    "CD名": "THE IDOLM@STER MILLION LIVE! ネバーエンド・ワンダーランド",
     "発売日": "2026-11-11"
   },
   {
@@ -438,7 +453,7 @@
     "時間": "04:09",
     "歌唱": ["エミリー スチュアート"],
     "CD品番": "LACZ-10379",
-    "CD名": "#発売前:THE IDOLM@STER MILLION LIVE! ひととせ結び",
+    "CD名": "THE IDOLM@STER MILLION LIVE! ひととせ結び",
     "発売日": "2026-11-11"
   },
   {
@@ -446,15 +461,26 @@
     "曲名": "Season's Greetings Party!",
     "よみがな": "しいずんすぐりいてぃんぐぱあてぃい",
     "CD題": "Season's Greetings Party!",
-    "作詞": [],
-    "作曲": [],
-    "編曲": [],
+    "作詞": ["松井洋平"],
+    "作曲": ["YAmai[SUPA LOVE]"],
+    "編曲": ["YAmai", "江口寛至", "土肥真生[SUPA LOVE]"],
     "ブランド": ["SideM"],
     "時間": "",
-    "歌唱": [],
-    "CD品番": "",
-    "CD名": "",
-    "発売日": ""
+    "歌唱": [
+      "W",
+      "蒼井悠介",
+      "蒼井享介",
+      "神速一魂",
+      "紅井朱雀",
+      "黒野玄武",
+      "C.FIRST",
+      "天峰秀",
+      "花園百々人",
+      "眉見鋭心"
+    ],
+    "CD品番": "LACA-25317",
+    "CD名": "#発売前:THE IDOLM@STER SideM Mフェス 2026 in Winter Wonderland テーマソング Season's Greetings Party!",
+    "発売日": "2026-12-02"
   },
   {
     "ID": "2053",
